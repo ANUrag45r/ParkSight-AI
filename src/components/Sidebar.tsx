@@ -1,4 +1,3 @@
-/* Sidebar v0.1: Primary Navigation Bar */
 import { useState } from 'react';
 import { Home, Crosshair, BarChart3, MapPin, FileText, Settings as SettingsIcon } from 'lucide-react';
 
