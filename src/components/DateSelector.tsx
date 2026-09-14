@@ -1,4 +1,4 @@
-/* DateSelector v0.1: Custom Calendar Scaffolding */
+/* DateSelector v0.2: Interactive Grid and Quick Presets */
 import { useState, useRef, useEffect } from 'react';
 import { 
   Calendar as CalendarIcon, 
