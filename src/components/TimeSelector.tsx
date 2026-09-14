@@ -1,4 +1,3 @@
-/* TimeSelector v0.1: Time Picker Container */
 import { useState, useRef, useEffect } from 'react';
 import { Clock, ChevronDown, ChevronUp, Check } from 'lucide-react';
 
