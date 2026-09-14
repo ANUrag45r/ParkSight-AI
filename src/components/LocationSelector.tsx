@@ -1,4 +1,3 @@
-/* LocationSelector v0.1: Core Dropdown */
 import { useState, useMemo } from 'react';
 import { MapPin, Search, ArrowUpRight, X } from 'lucide-react';
 import { locations } from '../data';
