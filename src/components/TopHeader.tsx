@@ -1,4 +1,3 @@
-/* TopHeader v0.2: Weather Telemetry and Live Sensor Indicators */
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, CloudSun, User, LogOut, Settings, Bell } from 'lucide-react';
 
