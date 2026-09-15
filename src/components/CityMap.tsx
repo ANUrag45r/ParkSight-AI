@@ -1,4 +1,4 @@
-/* CityMap v0.5: Simulated IoT Parking Sensors */
+/* CityMap v0.6: Radial Violation Risk Heatmap */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import { 
