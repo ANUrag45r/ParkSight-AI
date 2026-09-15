@@ -1,4 +1,4 @@
-/* CityMap v0.2: Dark Satellite Imagery Basemap */
+/* CityMap v0.3: Arterial Road Network Polylines */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import { 
