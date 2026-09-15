@@ -1,4 +1,4 @@
-/* CityMap v0.1: Leaflet Container & Esri Canvas Basemap */
+/* CityMap v0.2: Dark Satellite Imagery Basemap */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import { 
