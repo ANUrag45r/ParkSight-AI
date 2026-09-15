@@ -1,4 +1,3 @@
-/* PredictionResult v0.1: Score Card Layout */
 import React, { useState } from 'react';
 import { AlertTriangle, MapPin, Calendar, Clock, Cpu, Info, CheckCircle2 } from 'lucide-react';
 import { PredictionResult as PredictionResultType } from '../types';
