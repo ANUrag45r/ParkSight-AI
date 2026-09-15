@@ -1,4 +1,4 @@
-/* CityMap v0.3: Arterial Road Network Polylines */
+/* CityMap v0.4: Animated Velocity Dash Flow */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import { 
