@@ -1,4 +1,3 @@
-/* CityMap v0.7: Pulsating Radar Target Pin */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import { 
