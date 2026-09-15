@@ -1,4 +1,4 @@
-/* CityMap v0.4: Animated Velocity Dash Flow */
+/* CityMap v0.5: Simulated IoT Parking Sensors */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import { 
