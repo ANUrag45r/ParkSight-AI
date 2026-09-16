@@ -244,6 +244,24 @@ def predict_violations(req: PredictionRequest):
         message=message,
     )
 
-if __name__ == '__main__':
+
+@app.get("/api/hotspots")
+def get_trained_hotspots(limit: int = 50):
+    """Returns top trained geohash coordinates for map visualization."""
+    results = []
+    for gh in top_geohashes[:limit]:
+        try:
+            lat, lng = pgh.decode(gh)
+            results.append({
+                "geohash": gh,
+                "latitude": lat,
+                "longitude": lng,
+            })
+        except Exception:
+            continue
+    return {"count": len(results), "hotspots": results}
+
+
+if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host='127.0.0.1', port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
