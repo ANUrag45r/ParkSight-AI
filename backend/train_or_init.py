@@ -1,4 +1,3 @@
-# Step 1: Base CatBoost Training Pipeline Architecture
 import os
 import json
 import numpy as np
