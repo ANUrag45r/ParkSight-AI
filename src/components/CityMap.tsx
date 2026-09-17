@@ -18,9 +18,11 @@ import {
   initialRiskZones, 
   initialSensorNodes, 
   getTrafficColor, 
-  TrafficSegment,
-  RiskZone
+  TrafficSegment, 
+  RiskZone 
 } from '../trafficData';
+import TimeLapsePlayer from './TimeLapsePlayer';
+import { audioFx } from '../utils/audioFx';
 
 interface CityMapProps {
   selectedLocation: string;
@@ -30,13 +32,17 @@ interface CityMapProps {
     riskLevel: string;
   } | null;
   onNotification?: (msg: string) => void;
+  timelineHour?: number;
+  onTimelineHourChange?: (hour: number) => void;
 }
 
 const CityMap = ({ 
   selectedLocation, 
   onSelectLocation,
   predictionResult, 
-  onNotification 
+  onNotification,
+  timelineHour,
+  onTimelineHourChange,
 }: CityMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -60,9 +66,28 @@ const CityMap = ({
   const [zoomLevel, setZoomLevel] = useState(15);
   const [isSimulatingLive, setIsSimulatingLive] = useState(true);
 
+  // 24-Hour Time-Lapse active hour state
+  const [internalHour, setInternalHour] = useState(18); // Default 18:00 (06:00 PM)
+  const activeHour = timelineHour !== undefined ? timelineHour : internalHour;
+
+  const handleHourChange = (newH: number | ((prev: number) => number)) => {
+    const resolved = typeof newH === 'function' ? newH(activeHour) : newH;
+    setInternalHour(resolved);
+    onTimelineHourChange?.(resolved);
+  };
+
+  // Diurnal Poisson hour factor: peaks at 18:00 (~1.65), dips at 03:00 (~0.35)
+  const getHourFactor = (h: number) => {
+    const rad1 = (2 * Math.PI * (h - 7)) / 24;
+    const rad2 = (2 * Math.PI * (h - 13)) / 12;
+    return Math.max(0.3, Math.min(1.8, 0.9 + 0.5 * Math.sin(rad1) + 0.25 * Math.cos(rad2)));
+  };
+  const hourFactor = getHourFactor(activeHour);
+
   // Current location details
   const currentLocation = locations.find(l => l.id === selectedLocation) || locations[0];
-  const violations = predictionResult?.violations ?? currentLocation.predictedViolations;
+  const baseViolations = predictionResult?.violations ?? currentLocation.predictedViolations;
+  const violations = +(baseViolations * hourFactor).toFixed(1);
 
   // Helper to create Dark Canvas Layer Group (Zero API Key, No Watermark)
   const createDarkTiles = () => {
@@ -287,24 +312,28 @@ const CityMap = ({
     if (!showHeatmap) return;
 
     initialRiskZones.forEach((zone: RiskZone) => {
+      const dynamicRate = +(zone.predictedRate * hourFactor).toFixed(1);
+      const dynamicRadius = Math.round(zone.radius * (0.75 + 0.35 * hourFactor));
+      const dynamicOpacity = Math.min(0.65, Math.max(0.12, 0.2 + 0.08 * dynamicRate));
+
       // Outer subtle halo
       const outerCircle = L.circle(zone.center, {
-        radius: zone.radius * 1.35,
+        radius: dynamicRadius * 1.35,
         color: zone.color,
         fillColor: zone.color,
-        fillOpacity: 0.12,
+        fillOpacity: dynamicOpacity * 0.45,
         weight: 1,
         opacity: 0.25,
       });
 
       // Core glowing zone
       const coreCircle = L.circle(zone.center, {
-        radius: zone.radius,
+        radius: dynamicRadius,
         color: zone.color,
         fillColor: zone.color,
-        fillOpacity: zone.riskLevel === 'very-high' ? 0.35 : 0.25,
+        fillOpacity: dynamicOpacity,
         weight: 1.5,
-        opacity: 0.6,
+        opacity: 0.65,
         dashArray: '6, 6',
       });
 
@@ -313,7 +342,7 @@ const CityMap = ({
            ${zone.name}
          </div>
          <div style="font-size: 11px; color: ${zone.color};">
-           ${zone.predictedRate} violations / hr • ${zone.riskLevel.toUpperCase()}
+           ${dynamicRate} violations / hr (${activeHour < 10 ? '0' : ''}${activeHour}:00) • ${zone.riskLevel.toUpperCase()}
          </div>`,
         { sticky: true, className: 'glass-card-sm' }
       );
@@ -321,7 +350,7 @@ const CityMap = ({
       group.addLayer(outerCircle);
       group.addLayer(coreCircle);
     });
-  }, [showHeatmap]);
+  }, [showHeatmap, hourFactor, activeHour]);
 
   // Render Markers (Selected Pin + Hotspot Markers)
   useEffect(() => {
@@ -352,6 +381,7 @@ const CityMap = ({
 
       const marker = L.marker([loc.lat, loc.lng], { icon: dotIcon });
       marker.on('click', () => {
+        audioFx.playRadar();
         onSelectLocation?.(loc.id);
         onNotification?.(`Focused on ${loc.name}`);
       });
@@ -382,7 +412,7 @@ const CityMap = ({
               ${currentLocation.name}
             </div>
             <div style="font-size: 11px; font-weight: 600; color: #E946FF; margin-top: 1px; display: flex; align-items: center; gap: 4px;">
-              <span>Predicted: ${violations} / hr</span>
+              <span>Predicted: ${violations} / hr (${activeHour < 10 ? '0' : ''}${activeHour}:00)</span>
             </div>
           </div>
         </div>
@@ -398,7 +428,7 @@ const CityMap = ({
 
     group.addLayer(primaryMarker);
     selectedMarkerRef.current = primaryMarker;
-  }, [selectedLocation, currentLocation, violations, onSelectLocation, onNotification]);
+  }, [selectedLocation, currentLocation, violations, activeHour, onSelectLocation, onNotification]);
 
   // REAL-TIME SIMULATION ENGINE: Updates vehicle speeds, IoT telemetry, and live indicators
   useEffect(() => {
@@ -518,6 +548,7 @@ const CityMap = ({
           onClick={() => {
             const next = !is3D;
             setIs3D(next);
+            audioFx.playWhoosh();
             onNotification?.(next ? 'Enabled 3D Drone Perspective' : 'Switched to 2D Planar View');
           }}
           className={`flex items-center justify-center rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-200 h-[36px] cursor-pointer outline-none ${
@@ -537,7 +568,10 @@ const CityMap = ({
 
         {/* Satellite vs Dark Vector Map Mode */}
         <button
-          onClick={handleToggleTileMode}
+          onClick={() => {
+            audioFx.playClick();
+            handleToggleTileMode();
+          }}
           className={`flex items-center justify-center rounded-xl w-[36px] h-[36px] transition-all duration-200 cursor-pointer outline-none ${
             mapMode === 'satellite'
               ? 'text-cyan-300 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]'
@@ -556,6 +590,7 @@ const CityMap = ({
         {/* Toggle Live Traffic Layer */}
         <button
           onClick={() => {
+            audioFx.playClick();
             setShowTraffic(!showTraffic);
             onNotification?.(showTraffic ? 'Traffic Layer Hidden' : 'Live Traffic Layer Active');
           }}
@@ -577,6 +612,7 @@ const CityMap = ({
         {/* Toggle AI Heatmap Layer */}
         <button
           onClick={() => {
+            audioFx.playClick();
             setShowHeatmap(!showHeatmap);
             onNotification?.(showHeatmap ? 'Heatmap Hidden' : 'Violation Risk Heatmap Visible');
           }}
@@ -597,7 +633,10 @@ const CityMap = ({
 
         {/* Recenter on Selected Location */}
         <button
-          onClick={handleRecenter}
+          onClick={() => {
+            audioFx.playClick();
+            handleRecenter();
+          }}
           className="flex items-center justify-center rounded-xl w-[36px] h-[36px] text-white border border-[rgba(80,130,255,0.25)] hover:bg-white/10 hover:text-cyan-400 transition-all duration-200 cursor-pointer outline-none"
           style={{
             background: 'rgba(7,17,38,0.9)',
@@ -614,14 +653,20 @@ const CityMap = ({
           style={{ background: 'rgba(7,17,38,0.9)', backdropFilter: 'blur(10px)' }}
         >
           <button
-            onClick={handleZoomIn}
+            onClick={() => {
+              audioFx.playClick();
+              handleZoomIn();
+            }}
             className="flex items-center justify-center w-[36px] h-[34px] text-white hover:bg-white/10 hover:text-cyan-400 transition-all duration-200 cursor-pointer outline-none border-b border-[rgba(80,130,255,0.2)]"
             title="Zoom In"
           >
             <Plus size={16} />
           </button>
           <button
-            onClick={handleZoomOut}
+            onClick={() => {
+              audioFx.playClick();
+              handleZoomOut();
+            }}
             className="flex items-center justify-center w-[36px] h-[34px] text-white hover:bg-white/10 hover:text-cyan-400 transition-all duration-200 cursor-pointer outline-none"
             title="Zoom Out"
           >
@@ -672,7 +717,7 @@ const CityMap = ({
           </div>
         </div>
 
-        {/* Live Traffic Flow Indicator (like Google Maps traffic legend) */}
+        {/* Live Traffic Flow Indicator */}
         {showTraffic && (
           <div className="pt-2">
             <div className="flex items-center justify-between mb-1.5">
@@ -686,6 +731,15 @@ const CityMap = ({
             </div>
           </div>
         )}
+      </div>
+
+      {/* BOTTOM-RIGHT HUD: 24-Hour Time-Lapse Heatmap Player */}
+      <div className="absolute bottom-4 right-4 z-[400] w-[270px] sm:w-[300px] max-w-[calc(100%-230px)]">
+        <TimeLapsePlayer
+          currentHour={activeHour}
+          onHourChange={handleHourChange}
+          onNotification={onNotification}
+        />
       </div>
 
       {/* Subtle edge vignette to blend map seamlessly with dark dashboard border */}

@@ -11,16 +11,38 @@ import FeatureStrip from './components/FeatureStrip';
 import { getPrediction, locations } from './data';
 import { fetchCatBoostPrediction } from './api';
 import type { PredictionResult as PredictionResultType } from './types';
+import { audioFx } from './utils/audioFx';
+import { ParsedVoiceCommand } from './utils/voiceCommander';
 
 import AnalyticsView from './components/AnalyticsView';
 import HotspotsView from './components/HotspotsView';
 import ReportsView from './components/ReportsView';
 import SettingsView from './components/SettingsView';
 
+// Convert 24h number (0-23) to "HH:00 AM/PM"
+const hourToTimeString = (hour: number): string => {
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  const ampm = hour < 12 ? 'AM' : 'PM';
+  const paddedH = h12 < 10 ? `0${h12}` : `${h12}`;
+  return `${paddedH}:00 ${ampm}`;
+};
+
+// Convert "HH:MM AM/PM" to 24h number (0-23)
+const timeStringToHour = (timeStr: string): number => {
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return 18;
+  let h = parseInt(match[1], 10);
+  const ampm = match[3].toUpperCase();
+  if (ampm === 'PM' && h < 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return h;
+};
+
 function App() {
   const [selectedLocation, setSelectedLocation] = useState('mg-road');
   const [selectedDate, setSelectedDate] = useState(new Date(2025, 8, 16)); // Sep 16, 2025
   const [selectedTime, setSelectedTime] = useState('06:00 PM');
+  const [timelineHour, setTimelineHour] = useState(18); // Default 18:00 (06:00 PM)
   const [predictionResult, setPredictionResult] = useState<PredictionResultType | null>({
     violations: 3.2,
     riskLevel: 'high',
@@ -62,14 +84,21 @@ function App() {
   };
 
   const handlePredict = useCallback(async () => {
+    audioFx.playClick();
     setIsLoading(true);
     const loc = locations.find(l => l.id === selectedLocation) || locations[0];
     try {
       const result = await fetchCatBoostPrediction(loc, selectedDate, selectedTime);
       setPredictionResult(result);
+      if (result.riskLevel === 'very-high' || result.riskLevel === 'high') {
+        audioFx.playAlert();
+      } else {
+        audioFx.playSuccess();
+      }
       showNotification(`CatBoost Prediction: ${result.violations} violations/hr — ${result.riskLabel}`);
     } catch (err) {
       console.error(err);
+      audioFx.playSuccess();
       showNotification('Inference completed');
     } finally {
       setIsLoading(false);
@@ -77,11 +106,13 @@ function App() {
   }, [selectedLocation, selectedDate, selectedTime]);
 
   const handleNavChange = (navId: string) => {
+    audioFx.playWhoosh();
     setActiveNav(navId);
     showNotification(`Navigated to ${navId.charAt(0).toUpperCase() + navId.slice(1)}`);
   };
 
   const handleChangeRegion = () => {
+    audioFx.playClick();
     locationSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const input = locationSelectorRef.current?.querySelector('input');
     if (input) {
@@ -92,29 +123,100 @@ function App() {
   };
 
   const handleViewOnMap = () => {
+    audioFx.playRadar();
     mapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     showNotification('Showing location on map');
   };
 
   const handleDateChange = (newDate: Date) => {
+    audioFx.playClick();
     setSelectedDate(newDate);
     const dateStr = formatDate(newDate);
     setPredictionResult((prev) => prev ? { ...prev, date: dateStr } : null);
   };
 
   const handleTimeChange = (newTime: string) => {
+    audioFx.playClick();
     setSelectedTime(newTime);
+    setTimelineHour(timeStringToHour(newTime));
     setPredictionResult((prev) => prev ? { ...prev, time: newTime } : null);
     showNotification(`Time set to ${newTime}`);
   };
 
+  const handleTimelineHourChange = useCallback((hour: number) => {
+    setTimelineHour(hour);
+    const timeStr = hourToTimeString(hour);
+    setSelectedTime(timeStr);
+    setPredictionResult((prev) => prev ? { ...prev, time: timeStr } : null);
+  }, []);
+
   const handleLocationChange = (newLocId: string) => {
+    audioFx.playRadar();
     setSelectedLocation(newLocId);
     const loc = locations.find(l => l.id === newLocId);
     if (loc) {
       setPredictionResult((prev) => prev ? { ...prev, location: loc.name, area: loc.area } : null);
     }
   };
+
+  // Voice Command Dispatcher
+  const handleVoiceCommand = useCallback((cmd: ParsedVoiceCommand) => {
+    if (cmd.intent === 'navigate' && cmd.targetNav) {
+      handleNavChange(cmd.targetNav);
+    } else if (cmd.intent === 'predict') {
+      handlePredict();
+    } else if (cmd.intent === 'set_location') {
+      if (activeNav !== 'home' && activeNav !== 'predictor') {
+        setActiveNav('home');
+      }
+      let updatedLocId = selectedLocation;
+      let updatedDate = selectedDate;
+      let updatedTime = selectedTime;
+
+      if (cmd.locationId) {
+        updatedLocId = cmd.locationId;
+        setSelectedLocation(cmd.locationId);
+        const loc = locations.find(l => l.id === cmd.locationId);
+        if (loc) {
+          setPredictionResult((prev) => prev ? { ...prev, location: loc.name, area: loc.area } : null);
+        }
+      }
+
+      if (cmd.targetDate) {
+        updatedDate = cmd.targetDate;
+        setSelectedDate(cmd.targetDate);
+        const dateStr = formatDate(cmd.targetDate);
+        setPredictionResult((prev) => prev ? { ...prev, date: dateStr } : null);
+      }
+
+      if (cmd.targetTime) {
+        updatedTime = cmd.targetTime;
+        setSelectedTime(cmd.targetTime);
+        setTimelineHour(timeStringToHour(cmd.targetTime));
+        setPredictionResult((prev) => prev ? { ...prev, time: cmd.targetTime! } : null);
+      }
+
+      // Automatically trigger CatBoost forecast for this query
+      const targetLoc = locations.find(l => l.id === updatedLocId) || locations[0];
+      setIsLoading(true);
+      fetchCatBoostPrediction(targetLoc, updatedDate, updatedTime)
+        .then((res) => {
+          setPredictionResult(res);
+          if (res.riskLevel === 'very-high' || res.riskLevel === 'high') {
+            audioFx.playAlert();
+          } else {
+            audioFx.playSuccess();
+          }
+          showNotification(`Voice Forecast: ${res.violations} violations/hr (${res.riskLabel}) at ${targetLoc.name}`);
+        })
+        .catch((err) => {
+          console.error(err);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [activeNav, selectedLocation, selectedDate, selectedTime, handlePredict]);
 
   const currentLocation = locations.find(l => l.id === selectedLocation) || locations[0];
 
@@ -148,12 +250,18 @@ function App() {
           <TopHeader
             onChangeRegion={handleChangeRegion}
             showUserMenu={showUserMenu}
-            onToggleUserMenu={() => setShowUserMenu(!showUserMenu)}
+            onToggleUserMenu={() => {
+              audioFx.playClick();
+              setShowUserMenu(!showUserMenu);
+            }}
             onUserMenuAction={(action) => {
+              audioFx.playClick();
               setShowUserMenu(false);
               showNotification(action);
             }}
             activeNav={activeNav}
+            onVoiceCommand={handleVoiceCommand}
+            onNotification={showNotification}
           />
         </div>
 
@@ -195,12 +303,14 @@ function App() {
                 >
                   <CityMap
                     selectedLocation={selectedLocation}
-                    onSelectLocation={setSelectedLocation}
+                    onSelectLocation={handleLocationChange}
                     predictionResult={predictionResult ? {
                       violations: predictionResult.violations,
                       riskLevel: predictionResult.riskLevel,
                     } : null}
                     onNotification={showNotification}
+                    timelineHour={timelineHour}
+                    onTimelineHourChange={handleTimelineHourChange}
                   />
                 </div>
               </div>
@@ -223,6 +333,7 @@ function App() {
           {activeNav === 'analytics' && (
             <AnalyticsView
               onSelectHotspot={(id) => {
+                audioFx.playRadar();
                 setSelectedLocation(id);
                 setActiveNav('predictor');
               }}
@@ -233,6 +344,7 @@ function App() {
           {activeNav === 'hotspots' && (
             <HotspotsView
               onSelectHotspot={(id) => {
+                audioFx.playRadar();
                 setSelectedLocation(id);
                 setActiveNav('predictor');
               }}

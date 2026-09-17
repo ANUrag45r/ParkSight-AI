@@ -12,8 +12,13 @@ import {
   User, 
   LogOut, 
   Settings, 
-  Bell 
+  Bell,
+  Volume2,
+  VolumeX,
+  Mic
 } from 'lucide-react';
+import { audioFx } from '../utils/audioFx';
+import { voiceCommander, ParsedVoiceCommand, VoiceState } from '../utils/voiceCommander';
 
 interface TopHeaderProps {
   onChangeCity?: () => void;
@@ -22,6 +27,8 @@ interface TopHeaderProps {
   onToggleUserMenu: () => void;
   onUserMenuAction: (action: string) => void;
   activeNav?: string;
+  onVoiceCommand?: (cmd: ParsedVoiceCommand) => void;
+  onNotification?: (msg: string) => void;
 }
 
 const headerTitles: Record<string, { title: string; subtitle: string }> = {
@@ -57,9 +64,53 @@ const TopHeader = ({
   showUserMenu, 
   onToggleUserMenu, 
   onUserMenuAction, 
-  activeNav = 'home' 
+  activeNav = 'home',
+  onVoiceCommand,
+  onNotification,
 }: TopHeaderProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isAudioMuted, setIsAudioMuted] = useState(audioFx.getIsMuted());
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+
+  // Subscribe to Audio FX mute state
+  useEffect(() => {
+    return audioFx.subscribe((muted) => setIsAudioMuted(muted));
+  }, []);
+
+  // Subscribe to Voice Commander state & actions
+  useEffect(() => {
+    const unsubState = voiceCommander.onStateChange((state, transcript) => {
+      setVoiceState(state);
+      if (transcript !== undefined) setVoiceTranscript(transcript);
+    });
+
+    const unsubCmd = voiceCommander.onCommand((cmd) => {
+      onVoiceCommand?.(cmd);
+      onNotification?.(`Voice Action: ${cmd.summary}`);
+    });
+
+    return () => {
+      unsubState();
+      unsubCmd();
+    };
+  }, [onVoiceCommand, onNotification]);
+
+  const handleToggleAudio = () => {
+    const next = audioFx.toggleMute();
+    setIsAudioMuted(next);
+    onNotification?.(next ? 'Sound FX Muted' : 'Sound FX Active');
+  };
+
+  const handleToggleVoice = () => {
+    if (voiceState === 'listening') {
+      voiceCommander.stopListening();
+    } else {
+      voiceCommander.startListening();
+      onNotification?.('Listening for voice commands...');
+    }
+  };
+
   const [weather, setWeather] = useState<{
     temp: number | null;
     condition: string;
@@ -260,6 +311,63 @@ const TopHeader = ({
         <div className="flex flex-col items-start gap-1 cursor-default" title="Current time">
           <span className="text-sm font-semibold text-white tabular-nums">{formatTime(currentTime)}</span>
           <span className="text-xs text-slate-400">{formatDate(currentTime)}</span>
+        </div>
+
+        {/* Vertical divider */}
+        <div className="w-px h-8 bg-[rgba(80,130,255,0.2)]" />
+
+        {/* Audio FX Toggle Button */}
+        <button
+          onClick={handleToggleAudio}
+          className={`w-[34px] h-[34px] rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border outline-none ${
+            isAudioMuted
+              ? 'text-slate-500 bg-white/5 border-[rgba(80,130,255,0.15)] hover:text-slate-300 hover:bg-white/10'
+              : 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.25)] hover:bg-cyan-500/20'
+          }`}
+          title={isAudioMuted ? 'Unmute Futuristic Audio FX' : 'Mute Futuristic Audio FX'}
+        >
+          {isAudioMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+        </button>
+
+        {/* Voice Command Assistant Button */}
+        <div className="relative">
+          <button
+            onClick={handleToggleVoice}
+            className={`relative w-[34px] h-[34px] rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border outline-none ${
+              voiceState === 'listening'
+                ? 'bg-gradient-to-br from-pink-500 to-purple-600 text-white border-pink-400 shadow-[0_0_20px_rgba(233,70,255,0.6)] animate-pulse'
+                : voiceState === 'processing'
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]'
+                : 'text-slate-300 bg-white/5 border-[rgba(80,130,255,0.2)] hover:text-white hover:bg-white/10 hover:border-[rgba(80,130,255,0.4)]'
+            }`}
+            title="Speak voice command (e.g. 'Show Brigade Road tomorrow at 7 PM')"
+          >
+            {voiceState === 'listening' && (
+              <span className="absolute -inset-1 rounded-xl bg-pink-500/30 animate-ping pointer-events-none" />
+            )}
+            <Mic size={16} className={voiceState === 'listening' ? 'animate-bounce' : ''} />
+          </button>
+
+          {/* Voice Transcript HUD Popover */}
+          {(voiceState === 'listening' || voiceState === 'processing') && (
+            <div 
+              className="absolute right-0 top-12 z-50 rounded-xl px-4 py-2.5 border border-purple-500/40 shadow-2xl backdrop-blur-xl animate-count whitespace-nowrap min-w-[220px]"
+              style={{
+                background: 'rgba(7, 17, 38, 0.96)',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.6), 0 0 25px rgba(233,70,255,0.3)',
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-2 h-2 rounded-full bg-pink-400 animate-ping" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-pink-400">
+                  {voiceState === 'listening' ? 'Listening...' : 'Processing Query'}
+                </span>
+              </div>
+              <p className="text-xs text-white font-medium max-w-xs truncate">
+                {voiceTranscript ? `"${voiceTranscript}"` : 'Say "Show Brigade Road at 7 PM"...'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* User Avatar with Dropdown */}
