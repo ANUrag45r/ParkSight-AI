@@ -89,38 +89,44 @@ const CityMap = ({
   const baseViolations = predictionResult?.violations ?? currentLocation.predictedViolations;
   const violations = +(baseViolations * hourFactor).toFixed(1);
 
-  // Helper to create Dark Canvas Layer Group (Zero API Key, No Watermark, No missing tiles at high zoom)
+  // Helper to create Dark Canvas Layer Group (Zero API Key, Zero Watermark, No missing tiles)
   const createDarkTiles = () => {
     const base = L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
       {
-        subdomains: 'abcd',
-        maxZoom: 20,
-        maxNativeZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        className: 'carto-dark-tiles',
+        maxNativeZoom: 16,
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &copy; OpenStreetMap',
+        className: 'esri-dark-tiles',
       }
     );
-    return L.layerGroup([base]);
+    const reference = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+      {
+        maxNativeZoom: 16,
+        maxZoom: 19,
+        className: 'esri-ref-tiles',
+      }
+    );
+    return L.layerGroup([base, reference]);
   };
 
-  // Helper to create Satellite Layer Group (Zero API Key, No Watermark)
+  // Helper to create Satellite Layer Group (Zero API Key, Zero Watermark)
   const createSatelliteTiles = () => {
     const base = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       {
-        maxZoom: 20,
         maxNativeZoom: 18,
+        maxZoom: 19,
         attribution: '&copy; Esri &copy; Maxar, Earthstar Geographics',
         className: 'satellite-tiles',
       }
     );
     const labels = L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
       {
-        subdomains: 'abcd',
-        maxZoom: 20,
-        maxNativeZoom: 19,
+        maxNativeZoom: 17,
+        maxZoom: 19,
         className: 'satellite-ref-tiles',
       }
     );
