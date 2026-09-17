@@ -520,9 +520,30 @@ const TopHeader = ({
         {/* Bottom Helper Bar: Error alert, Live spoken status, or Clickable Sample Commands */}
         <div className="flex items-center justify-between gap-2 text-[11px] px-1 flex-wrap">
           {errorMessage ? (
-            <div className="flex items-center gap-1.5 text-red-400 font-medium">
-              <AlertCircle size={13} />
-              <span>{errorMessage}</span>
+            <div className="flex items-center gap-2 text-red-400 font-medium flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <AlertCircle size={13} className="flex-shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+              <button
+                onClick={handleToggleVoice}
+                className="px-2 py-0.5 rounded text-[10px] bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 cursor-pointer transition-colors outline-none flex items-center gap-1"
+              >
+                <span>Retry Voice ↻</span>
+              </button>
+              <span className="text-slate-600 hidden sm:inline">|</span>
+              <span className="text-slate-400 hidden sm:inline">Or click to run:</span>
+              <div className="flex items-center gap-1 flex-wrap">
+                {sampleCommands.slice(0, 3).map((cmd, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleManualSubmit(cmd)}
+                    className="px-2 py-0.5 rounded-md bg-white/5 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px] cursor-pointer transition-colors outline-none"
+                  >
+                    "{cmd}"
+                  </button>
+                ))}
+              </div>
             </div>
           ) : voiceState === 'listening' ? (
             <div className="flex items-center gap-1.5 text-pink-400 font-medium animate-pulse">

@@ -103,7 +103,7 @@ class VoiceCommander {
   }
 
   /**
-   * Request microphone permission & start listening with continuous recognition
+   * Request microphone permission & start listening
    */
   public async startListening(): Promise<void> {
     if (!this.isSupported()) {
@@ -114,40 +114,22 @@ class VoiceCommander {
     // Stop any existing instance
     this.cleanup();
 
-    // 1. Explicitly prompt / verify microphone permission via getUserMedia
-    this.setState('requesting', 'Requesting microphone access...');
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Stop audio tracks immediately so hardware is unblocked for Web Speech API
-        stream.getTracks().forEach((track) => track.stop());
-      } catch (err: unknown) {
-        console.warn('Microphone permission check failed:', err);
-        this.setState(
-          'error',
-          'Microphone permission blocked. Please click the lock or camera icon in your browser address bar to allow microphone access.'
-        );
-        return;
-      }
-    }
-
     try {
       const SpeechRecognitionClass =
         (window as unknown as { SpeechRecognition?: new () => SpeechRecognitionInstance }).SpeechRecognition ||
         (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionInstance }).webkitSpeechRecognition;
 
       if (!SpeechRecognitionClass) {
-        this.setState('unsupported', 'Speech recognition API not available.');
+        this.setState('unsupported', 'Speech recognition API not available in this browser.');
         return;
       }
 
       const recog = new SpeechRecognitionClass();
-      recog.continuous = true;
+      // Single utterance mode avoids long-lived WebRTC cloud streaming drops ('network' error)
+      recog.continuous = false;
       recog.interimResults = true;
       recog.maxAlternatives = 1;
-      // Use user's browser language if English, else fallback to en-IN (Bangalore locale)
-      const userLang = navigator.language || 'en-US';
-      recog.lang = userLang.toLowerCase().startsWith('en') ? userLang : 'en-IN';
+      recog.lang = 'en-US';
 
       let accumulatedFinal = '';
 
@@ -156,17 +138,6 @@ class VoiceCommander {
           window.clearTimeout(this.silenceTimer);
           this.silenceTimer = null;
         }
-      };
-
-      const resetSilenceTimer = (text: string) => {
-        clearTimer();
-        // Automatically finalize and process if user pauses for 2 seconds
-        this.silenceTimer = window.setTimeout(() => {
-          if (text.trim().length > 0) {
-            this.stopListening();
-            this.processTranscript(text.trim());
-          }
-        }, 2000);
       };
 
       recog.onstart = () => {
@@ -189,7 +160,9 @@ class VoiceCommander {
         const fullSpeech = (accumulatedFinal + ' ' + interim).trim();
         if (fullSpeech) {
           this.setState('listening', fullSpeech);
-          resetSilenceTimer(fullSpeech);
+          if (accumulatedFinal.trim()) {
+            this.processTranscript(accumulatedFinal.trim());
+          }
         }
       };
 
@@ -205,10 +178,17 @@ class VoiceCommander {
         } else if (e.error === 'not-allowed') {
           this.setState(
             'error',
-            'Microphone permission blocked. Please enable microphone access in your browser settings.'
+            'Microphone permission blocked. Please enable microphone access in your browser address bar.'
           );
         } else if (e.error === 'network') {
-          this.setState('error', 'Network error occurred during speech capture.');
+          if (accumulatedFinal.trim()) {
+            this.processTranscript(accumulatedFinal.trim());
+          } else {
+            this.setState(
+              'error',
+              'Speech service network error (Google Cloud Speech unreachable). Try again, click a quick command, or type below.'
+            );
+          }
         } else {
           this.setState('error', `Voice capture error: ${e.error}`);
         }
@@ -229,7 +209,7 @@ class VoiceCommander {
       recog.start();
     } catch (err) {
       console.error('Failed to start speech recognition:', err);
-      this.setState('error', 'Could not initialize speech recognition. Try typing your command.');
+      this.setState('error', 'Could not initialize speech recognition. Try clicking a quick command or typing.');
     }
   }
 
