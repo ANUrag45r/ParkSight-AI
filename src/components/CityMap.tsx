@@ -490,8 +490,8 @@ const CityMap = ({
         isolation: 'isolate',
         WebkitMaskImage: '-webkit-radial-gradient(white, black)',
         transform: 'translateZ(0)',
-        minHeight: '380px',
-        maxHeight: '100%',
+        minHeight: '100%',
+        height: '100%',
       }}
     >
       {/* 3D Tilted Map Viewport Wrapper */}

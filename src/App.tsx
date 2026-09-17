@@ -266,13 +266,13 @@ function App() {
         </div>
 
         {/* Dynamic Main Content Area */}
-        <div className="px-6 pt-3 pb-3 flex-1 flex flex-col gap-3 min-h-0">
+        <div className="px-6 pt-2 pb-6 flex flex-col gap-4">
           {(activeNav === 'home' || activeNav === 'predictor') && (
             <>
               {/* Two column layout: Selectors + Map */}
-              <div className="flex gap-4 flex-1 min-h-0">
+              <div className="flex flex-col lg:flex-row gap-4 w-full items-stretch">
                 {/* Left Column - Selectors */}
-                <div className="w-[310px] flex-shrink-0 flex flex-col gap-3 overflow-y-auto pr-1" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+                <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-3">
                   <div ref={locationSelectorRef}>
                     <LocationSelector
                       selectedLocation={selectedLocation}
@@ -297,8 +297,7 @@ function App() {
 
                 {/* Right Column - Map */}
                 <div 
-                  className="flex-1 min-w-0 flex flex-col h-full overflow-hidden" 
-                  style={{ minHeight: '380px', maxHeight: 'calc(100vh - 280px)' }}
+                  className="flex-1 min-w-0 flex flex-col rounded-2xl overflow-hidden h-[460px] lg:h-[480px] xl:h-[510px]" 
                   ref={mapRef}
                 >
                   <CityMap
@@ -316,7 +315,7 @@ function App() {
               </div>
 
               {/* Prediction Result */}
-              <div className="flex-shrink-0">
+              <div className="w-full mt-1">
                 <PredictionResult
                   result={predictionResult}
                   isLoading={isLoading}
@@ -324,7 +323,7 @@ function App() {
               </div>
 
               {/* Feature Strip */}
-              <div className="flex-shrink-0 pb-2">
+              <div className="w-full pb-3">
                 <FeatureStrip />
               </div>
             </>

@@ -297,13 +297,21 @@ const TopHeader = ({
     return <CloudSun size={18} className="text-amber-400" />;
   };
 
+  const getGreeting = (date: Date): string => {
+    const hour = date.getHours();
+    if (hour >= 5 && hour < 12) return 'Good Morning,';
+    if (hour >= 12 && hour < 17) return 'Good Afternoon,';
+    if (hour >= 17 && hour < 22) return 'Good Evening,';
+    return 'Good Night,';
+  };
+
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Top Row: Greeting on left, Weather / Time / SFX / User on right */}
       <div className="flex items-start justify-between w-full">
         {/* Left Side */}
         <div className="flex flex-col">
-          <p className="text-sm text-slate-400 font-normal">Good Morning,</p>
+          <p className="text-sm text-slate-400 font-normal">{getGreeting(currentTime)}</p>
           <h1 className="text-2xl font-semibold text-white mt-1">{title}</h1>
           <p className="text-sm text-slate-400 mt-1 max-w-lg whitespace-pre-line">
             {subtitle}
