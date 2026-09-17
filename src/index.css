@@ -275,3 +275,72 @@ body {
   filter: brightness(1.2) contrast(1.2);
   opacity: 0.85;
 }
+
+/* ANIMATED CYBER CITY & PATROL CAR KEYFRAMES */
+@keyframes cyberCarCruise {
+  0% {
+    transform: translateX(-70px);
+  }
+  100% {
+    transform: translateX(270px);
+  }
+}
+
+@keyframes cyberCarBob {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
+@keyframes roadFlow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -32;
+  }
+}
+
+@keyframes windowPulse {
+  0%, 100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes beaconPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(0.6);
+  }
+}
+
+.animate-car-cruise {
+  animation: cyberCarCruise 7.5s linear infinite;
+}
+
+.animate-car-bob {
+  animation: cyberCarBob 0.35s ease-in-out infinite;
+}
+
+.animate-road-flow {
+  animation: roadFlow 0.8s linear infinite;
+}
+
+.animate-window-pulse {
+  animation: windowPulse 3s ease-in-out infinite;
+}
+
+.animate-beacon-pulse {
+  animation: beaconPulse 1.2s ease-in-out infinite;
+}
+
