@@ -81,14 +81,14 @@ function App() {
     showNotification(`Navigated to ${navId.charAt(0).toUpperCase() + navId.slice(1)}`);
   };
 
-  const handleChangeCity = () => {
+  const handleChangeRegion = () => {
     locationSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const input = locationSelectorRef.current?.querySelector('input');
     if (input) {
       input.focus();
       input.select();
     }
-    showNotification('Select a new location below');
+    showNotification('Select a new region or hotspot below');
   };
 
   const handleViewOnMap = () => {
@@ -146,7 +146,7 @@ function App() {
         {/* Top Header */}
         <div className="px-6 pt-5 pb-2 flex-shrink-0">
           <TopHeader
-            onChangeCity={handleChangeCity}
+            onChangeRegion={handleChangeRegion}
             showUserMenu={showUserMenu}
             onToggleUserMenu={() => setShowUserMenu(!showUserMenu)}
             onUserMenuAction={(action) => {

@@ -1,8 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, CloudSun, User, LogOut, Settings, Bell } from 'lucide-react';
+import { 
+  MapPin, 
+  CloudSun, 
+  Sun, 
+  Moon, 
+  Cloud, 
+  CloudRain, 
+  CloudDrizzle, 
+  CloudLightning, 
+  CloudFog, 
+  User, 
+  LogOut, 
+  Settings, 
+  Bell 
+} from 'lucide-react';
 
 interface TopHeaderProps {
-  onChangeCity: () => void;
+  onChangeCity?: () => void;
+  onChangeRegion?: () => void;
   showUserMenu: boolean;
   onToggleUserMenu: () => void;
   onUserMenuAction: (action: string) => void;
@@ -36,8 +51,31 @@ const headerTitles: Record<string, { title: string; subtitle: string }> = {
   }
 };
 
-const TopHeader = ({ onChangeCity, showUserMenu, onToggleUserMenu, onUserMenuAction, activeNav = 'home' }: TopHeaderProps) => {
+const TopHeader = ({ 
+  onChangeCity, 
+  onChangeRegion, 
+  showUserMenu, 
+  onToggleUserMenu, 
+  onUserMenuAction, 
+  activeNav = 'home' 
+}: TopHeaderProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [weather, setWeather] = useState<{
+    temp: number | null;
+    condition: string;
+    weatherCode: number;
+    isDay: boolean;
+    isLoading: boolean;
+    lastUpdated: Date | null;
+  }>({
+    temp: 26,
+    condition: 'Loading...',
+    weatherCode: 2,
+    isDay: true,
+    isLoading: true,
+    lastUpdated: null,
+  });
+
   const menuRef = useRef<HTMLDivElement>(null);
 
   const { title, subtitle } = headerTitles[activeNav] || headerTitles.home;
@@ -47,6 +85,67 @@ const TopHeader = ({ onChangeCity, showUserMenu, onToggleUserMenu, onUserMenuAct
       setCurrentTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Fetch real-time Bangalore weather telemetry
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchBangaloreWeather = async () => {
+      try {
+        const res = await fetch(
+          'https://api.open-meteo.com/v1/forecast?latitude=12.9716&longitude=77.5946&current_weather=true'
+        );
+        if (!res.ok) throw new Error(`Weather telemetry returned status ${res.status}`);
+        const data = await res.json();
+        const current = data?.current_weather;
+
+        if (current && isMounted) {
+          const code = Number(current.weathercode ?? 2);
+          const isDay = current.is_day === 1;
+          const temp = Math.round(Number(current.temperature));
+
+          let condition = 'Partly Cloudy';
+          if (code === 0) condition = isDay ? 'Clear Sky' : 'Clear Night';
+          else if (code === 1) condition = isDay ? 'Mainly Sunny' : 'Mainly Clear';
+          else if (code === 2) condition = 'Partly Cloudy';
+          else if (code === 3) condition = 'Overcast';
+          else if (code === 45 || code === 48) condition = 'Foggy';
+          else if (code >= 51 && code <= 57) condition = 'Drizzle';
+          else if (code >= 61 && code <= 67) condition = 'Rain';
+          else if (code >= 71 && code <= 77) condition = 'Snow';
+          else if (code >= 80 && code <= 82) condition = 'Rain Showers';
+          else if (code >= 95) condition = 'Thunderstorm';
+
+          setWeather({
+            temp,
+            condition,
+            weatherCode: code,
+            isDay,
+            isLoading: false,
+            lastUpdated: new Date(),
+          });
+        }
+      } catch (err) {
+        console.warn('Real-time Bangalore weather fetch warning:', err);
+        if (isMounted) {
+          setWeather(prev => ({
+            ...prev,
+            temp: prev.temp ?? 26,
+            condition: prev.condition === 'Loading...' ? 'Partly Cloudy' : prev.condition,
+            isLoading: false,
+          }));
+        }
+      }
+    };
+
+    fetchBangaloreWeather();
+    // Poll every 10 minutes to maintain real-time accuracy
+    const weatherTimer = setInterval(fetchBangaloreWeather, 10 * 60 * 1000);
+    return () => {
+      isMounted = false;
+      clearInterval(weatherTimer);
+    };
   }, []);
 
   // Close user menu on outside click
@@ -77,6 +176,32 @@ const TopHeader = ({ onChangeCity, showUserMenu, onToggleUserMenu, onUserMenuAct
     });
   };
 
+  const renderWeatherIcon = () => {
+    const { weatherCode, isDay } = weather;
+    if (weatherCode === 0) {
+      return isDay ? <Sun size={18} className="text-amber-400 animate-pulse" /> : <Moon size={18} className="text-cyan-200" />;
+    }
+    if (weatherCode === 1 || weatherCode === 2) {
+      return isDay ? <CloudSun size={18} className="text-amber-400" /> : <Cloud size={18} className="text-slate-300" />;
+    }
+    if (weatherCode === 3) {
+      return <Cloud size={18} className="text-slate-300" />;
+    }
+    if (weatherCode === 45 || weatherCode === 48) {
+      return <CloudFog size={18} className="text-slate-300" />;
+    }
+    if (weatherCode >= 51 && weatherCode <= 57) {
+      return <CloudDrizzle size={18} className="text-cyan-400" />;
+    }
+    if ((weatherCode >= 61 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) {
+      return <CloudRain size={18} className="text-blue-400" />;
+    }
+    if (weatherCode >= 95) {
+      return <CloudLightning size={18} className="text-purple-400" />;
+    }
+    return <CloudSun size={18} className="text-amber-400" />;
+  };
+
   return (
     <div className="flex items-start justify-between w-full">
       {/* Left Side */}
@@ -98,23 +223,34 @@ const TopHeader = ({ onChangeCity, showUserMenu, onToggleUserMenu, onUserMenuAct
             <span className="text-sm font-medium text-white">Bangalore</span>
           </div>
           <button 
-            onClick={onChangeCity}
+            onClick={onChangeRegion || onChangeCity}
             className="text-xs text-[#2563FF] cursor-pointer hover:text-[#00A8FF] hover:underline bg-transparent border-none outline-none p-0 transition-colors duration-200"
+            title="Select a different region in Bangalore"
           >
-            Change City &gt;
+            Change Region &gt;
           </button>
         </div>
 
         {/* Vertical divider */}
         <div className="w-px h-8 bg-[rgba(80,130,255,0.2)]" />
 
-        {/* Weather Section */}
-        <div className="flex flex-col items-start gap-1 cursor-default" title="Current weather in Bangalore">
+        {/* Weather Section - Real-time Bangalore Telemetry */}
+        <div 
+          className="flex flex-col items-start gap-1 cursor-default group" 
+          title={weather.lastUpdated ? `Live real-time weather in Bangalore (Updated at ${weather.lastUpdated.toLocaleTimeString()})` : "Live real-time weather in Bangalore"}
+        >
           <div className="flex items-center gap-1.5">
-            <CloudSun size={18} className="text-yellow-400" />
-            <span className="text-sm font-semibold text-white">28°C</span>
+            {renderWeatherIcon()}
+            <span className="text-sm font-semibold text-white">
+              {weather.temp !== null ? `${weather.temp}°C` : '--°C'}
+            </span>
+            {weather.isLoading && (
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping ml-0.5" title="Syncing..." />
+            )}
           </div>
-          <span className="text-xs text-slate-400">Partly Cloudy</span>
+          <span className="text-xs text-slate-400 flex items-center gap-1">
+            {weather.condition}
+          </span>
         </div>
 
         {/* Vertical divider */}
