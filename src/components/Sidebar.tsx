@@ -238,48 +238,48 @@ const Sidebar = ({ activeNav, onNavChange }: SidebarProps) => {
             {/* ANIMATED SMART PATROL CYBER CAR */}
             <g className="animate-car-cruise">
               <g className="animate-car-bob">
-                {/* Glowing Forward Headlight Beam Cone */}
+                {/* Glowing Forward Headlight Beam Cone (Cyan beam projecting forward) */}
                 <polygon 
-                  points="36,92 68,86 68,102 36,95" 
+                  points="38,92 72,85 72,103 38,96" 
                   fill="url(#headlightBeam)" 
                 />
 
-                {/* Red Tail-Light Motion Trail */}
+                {/* Red Tail-Light Motion Trail (Extending behind car to the left) */}
                 <rect x="-14" y="91" width="14" height="2" fill="url(#tailLightTrail)" />
 
-                {/* Cyber Car Chassis Body */}
+                {/* Cyber Car Chassis Body - Oriented forward (long hood on right, sleek cabin, short trunk on left) */}
                 <path 
-                  d="M0 94L4 90H14L19 86H30L36 90H38L40 94L38 97H0V94Z" 
+                  d="M0 94 L3 90 H6 L12 86 H22 L28 90 H37 L40 94 L38 97 H2 L0 94Z" 
                   fill="#0B1A3B" 
                   stroke="#22D3EE" 
                   strokeWidth="0.8" 
                 />
 
-                {/* Holographic Windshield Glass */}
-                <polygon points="15,89 19,86.5 28,86.5 32,89" fill="rgba(34, 211, 238, 0.5)" />
+                {/* Holographic Windshield Glass (Cabin windshield & rear window) */}
+                <polygon points="7,89.5 12.5,86.5 21.5,86.5 27,89.5" fill="rgba(34, 211, 238, 0.5)" />
 
-                {/* Cyber Patrol Rooftop Lightbar (Dual-tone flashing) */}
-                <rect x="22" y="84" width="5" height="1.8" rx="0.5" fill="#22D3EE" className="animate-ping" />
-                <rect x="22" y="84" width="2.5" height="1.8" fill="#FF3158" />
-                <rect x="24.5" y="84" width="2.5" height="1.8" fill="#22D3EE" />
+                {/* Cyber Patrol Rooftop Lightbar (Dual-tone flashing: red rear, cyan front) */}
+                <rect x="15" y="84" width="5" height="1.8" rx="0.5" fill="#22D3EE" className="animate-ping" />
+                <rect x="15" y="84" width="2.5" height="1.8" fill="#FF3158" />
+                <rect x="17.5" y="84" width="2.5" height="1.8" fill="#22D3EE" />
 
-                {/* Front Headlight LED */}
-                <circle cx="38" cy="93.5" r="1.2" fill="#22D3EE" />
-                <circle cx="38" cy="93.5" r="2.5" fill="rgba(34, 211, 238, 0.6)" className="animate-pulse" />
+                {/* Front Headlight LED (Cyan forward headlight) */}
+                <circle cx="39" cy="93.5" r="1.2" fill="#22D3EE" />
+                <circle cx="39" cy="93.5" r="2.5" fill="rgba(34, 211, 238, 0.6)" className="animate-pulse" />
 
-                {/* Rear Tail Light LED */}
+                {/* Rear Tail Light LED (Red tail light) */}
                 <rect x="0" y="91" width="1.5" height="3" rx="0.5" fill="#FF3158" />
 
                 {/* Aerodynamic Side Neon Accent Line */}
-                <line x1="6" y1="94" x2="33" y2="94" stroke="#2563FF" strokeWidth="0.8" />
-
-                {/* Front Cyber Wheel */}
-                <circle cx="31" cy="97" r="3.2" fill="#050B18" stroke="#22D3EE" strokeWidth="0.9" />
-                <circle cx="31" cy="97" r="1.2" fill="#22D3EE" />
+                <line x1="6" y1="94" x2="34" y2="94" stroke="#2563FF" strokeWidth="0.8" />
 
                 {/* Rear Cyber Wheel */}
                 <circle cx="9" cy="97" r="3.2" fill="#050B18" stroke="#22D3EE" strokeWidth="0.9" />
                 <circle cx="9" cy="97" r="1.2" fill="#22D3EE" />
+
+                {/* Front Cyber Wheel */}
+                <circle cx="31" cy="97" r="3.2" fill="#050B18" stroke="#22D3EE" strokeWidth="0.9" />
+                <circle cx="31" cy="97" r="1.2" fill="#22D3EE" />
               </g>
             </g>
           </svg>
