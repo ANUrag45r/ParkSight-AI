@@ -256,7 +256,8 @@ body {
   border: 1px solid rgba(80, 130, 255, 0.3) !important;
 }
 
-/* Esri Dark Canvas high-tech styling: transforms neutral dark gray into futuristic navy blue/cyan glow */
+/* Carto & Esri Dark Canvas high-tech styling: transforms neutral dark gray into futuristic navy blue/cyan glow */
+.carto-dark-tiles,
 .esri-dark-tiles {
   filter: brightness(0.95) contrast(1.15) hue-rotate(205deg) saturate(1.4);
 }
