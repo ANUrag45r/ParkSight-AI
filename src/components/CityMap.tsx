@@ -138,12 +138,38 @@ const CityMap = ({
       setZoomLevel(map.getZoom());
     });
 
+    // Initial resize invalidations to handle flexbox layout settling
+    const t1 = setTimeout(() => map.invalidateSize(), 120);
+    const t2 = setTimeout(() => map.invalidateSize(), 450);
+
+    // ResizeObserver to adapt smoothly when container or window changes
+    let resizeObserver: ResizeObserver | null = null;
+    if (mapContainerRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        map.invalidateSize();
+      });
+      resizeObserver.observe(mapContainerRef.current);
+    }
+
     // Cleanup
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       map.remove();
       mapInstanceRef.current = null;
     };
   }, []);
+
+  // Invalidate size when 3D tilt mode changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 720);
+    return () => clearTimeout(timer);
+  }, [is3D]);
 
   // Handle Tile Mode Change (Dark Vector vs Satellite Aerial)
   const handleToggleTileMode = useCallback(() => {
@@ -428,23 +454,33 @@ const CityMap = ({
 
   return (
     <div 
-      className="relative w-full h-full rounded-2xl border border-[rgba(80,130,255,0.22)] overflow-hidden glass-card transition-all duration-500"
+      className="relative w-full h-full flex-1 rounded-2xl border border-[rgba(80,130,255,0.22)] overflow-hidden glass-card transition-all duration-500"
       style={{
         perspective: is3D ? '1200px' : 'none',
+        isolation: 'isolate',
+        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+        transform: 'translateZ(0)',
+        minHeight: '380px',
+        maxHeight: '100%',
       }}
     >
       {/* 3D Tilted Map Viewport Wrapper */}
       <div 
-        className="w-full h-full transition-transform duration-700 ease-out origin-bottom"
+        className="w-full h-full flex-1 relative overflow-hidden transition-transform duration-700 ease-out origin-bottom"
         style={{
           transform: is3D ? 'rotateX(26deg) scale(1.06) translateY(-14px)' : 'none',
+          transformOrigin: '50% 100%',
         }}
       >
-        <div ref={mapContainerRef} className="w-full h-full" />
+        <div 
+          ref={mapContainerRef} 
+          className="w-full h-full absolute inset-0"
+          style={{ width: '100%', height: '100%' }}
+        />
       </div>
 
       {/* TOP-LEFT HUD: Real-time telemetry status badge (like Google Maps live traffic bar) */}
-      <div className="absolute top-4 left-4 z-[400] flex items-center gap-2 pointer-events-none">
+      <div className="absolute top-4 left-4 z-[400] flex items-center gap-2 pointer-events-none max-w-[calc(100%-120px)]">
         <div 
           className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-[rgba(80,130,255,0.25)] shadow-lg backdrop-blur-md"
           style={{ background: 'rgba(5, 11, 24, 0.88)' }}

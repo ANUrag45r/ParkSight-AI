@@ -188,7 +188,11 @@ function App() {
                 </div>
 
                 {/* Right Column - Map */}
-                <div className="flex-1 min-h-[420px]" ref={mapRef}>
+                <div 
+                  className="flex-1 min-w-0 flex flex-col h-full overflow-hidden" 
+                  style={{ minHeight: '380px', maxHeight: 'calc(100vh - 280px)' }}
+                  ref={mapRef}
+                >
                   <CityMap
                     selectedLocation={selectedLocation}
                     onSelectLocation={setSelectedLocation}
