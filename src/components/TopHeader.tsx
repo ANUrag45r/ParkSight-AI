@@ -519,7 +519,7 @@ const TopHeader = ({
 
         {/* Bottom Helper Bar: Error alert, Live spoken status, or Clickable Sample Commands */}
         <div className="flex items-center justify-between gap-2 text-[11px] px-1 flex-wrap">
-          {errorMessage ? (
+          {errorMessage && !inputQuery.trim() ? (
             <div className="flex items-center gap-2 text-red-400 font-medium flex-wrap">
               <div className="flex items-center gap-1.5">
                 <AlertCircle size={13} className="flex-shrink-0" />
@@ -552,12 +552,20 @@ const TopHeader = ({
                 {inputQuery ? `Speaking: "${inputQuery}"` : 'Awaiting speech — start speaking now into your mic...'}
               </span>
             </div>
-          ) : voiceState === 'success' || lastExecutedText ? (
-            <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-              <CheckCircle2 size={13} />
-              <span className="truncate max-w-lg">
-                Voice recognized: "{lastExecutedText || inputQuery}"
-              </span>
+          ) : voiceState === 'success' || lastExecutedText || inputQuery.trim() ? (
+            <div className="flex items-center gap-2 text-emerald-400 font-medium flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 size={13} />
+                <span className="truncate max-w-lg">
+                  Voice captured: "{lastExecutedText || inputQuery}"
+                </span>
+              </div>
+              <button
+                onClick={() => handleManualSubmit()}
+                className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 cursor-pointer transition-colors outline-none"
+              >
+                Execute Forecast ➔
+              </button>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-slate-400 flex-wrap">

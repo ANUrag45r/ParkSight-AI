@@ -132,6 +132,7 @@ class VoiceCommander {
       recog.lang = 'en-US';
 
       let accumulatedFinal = '';
+      let latestCapturedSpeech = '';
 
       const clearTimer = () => {
         if (this.silenceTimer) {
@@ -143,6 +144,7 @@ class VoiceCommander {
       recog.onstart = () => {
         audioFx.playVoiceTrigger();
         accumulatedFinal = '';
+        latestCapturedSpeech = '';
         this.setState('listening', '');
       };
 
@@ -159,7 +161,10 @@ class VoiceCommander {
 
         const fullSpeech = (accumulatedFinal + ' ' + interim).trim();
         if (fullSpeech) {
+          latestCapturedSpeech = fullSpeech;
+          this.lastSpokenText = fullSpeech;
           this.setState('listening', fullSpeech);
+
           if (accumulatedFinal.trim()) {
             this.processTranscript(accumulatedFinal.trim());
           }
@@ -169,26 +174,26 @@ class VoiceCommander {
       recog.onerror = (e) => {
         console.warn('Speech recognition error event:', e.error);
         clearTimer();
+
+        // If any speech was captured before socket disconnect, process it as a success!
+        const spoken = (accumulatedFinal || latestCapturedSpeech || this.lastSpokenText || '').trim();
+        if (spoken.length > 0) {
+          this.processTranscript(spoken);
+          return;
+        }
+
         if (e.error === 'no-speech') {
-          if (accumulatedFinal.trim()) {
-            this.processTranscript(accumulatedFinal.trim());
-          } else {
-            this.setState('error', 'No speech detected. Please speak clearly into your microphone.');
-          }
+          this.setState('error', 'No speech detected. Please speak clearly into your microphone.');
         } else if (e.error === 'not-allowed') {
           this.setState(
             'error',
             'Microphone permission blocked. Please enable microphone access in your browser address bar.'
           );
         } else if (e.error === 'network') {
-          if (accumulatedFinal.trim()) {
-            this.processTranscript(accumulatedFinal.trim());
-          } else {
-            this.setState(
-              'error',
-              'Speech service network error (Google Cloud Speech unreachable). Try again, click a quick command, or type below.'
-            );
-          }
+          this.setState(
+            'error',
+            'Speech service network error (Google Cloud Speech unreachable). Try again, click a quick command, or type below.'
+          );
         } else {
           this.setState('error', `Voice capture error: ${e.error}`);
         }
@@ -196,9 +201,10 @@ class VoiceCommander {
 
       recog.onend = () => {
         clearTimer();
-        if (this.state === 'listening') {
-          if (accumulatedFinal.trim()) {
-            this.processTranscript(accumulatedFinal.trim());
+        if (this.state === 'listening' || this.state === 'requesting') {
+          const spoken = (accumulatedFinal || latestCapturedSpeech || this.lastSpokenText || '').trim();
+          if (spoken.length > 0) {
+            this.processTranscript(spoken);
           } else {
             this.setState('idle', this.lastSpokenText);
           }
@@ -224,7 +230,12 @@ class VoiceCommander {
       } catch {}
     }
     if (this.state === 'listening' || this.state === 'requesting') {
-      this.setState('idle', this.lastSpokenText);
+      const spoken = this.lastSpokenText.trim();
+      if (spoken.length > 0) {
+        this.processTranscript(spoken);
+      } else {
+        this.setState('idle', this.lastSpokenText);
+      }
     }
   }
 
@@ -318,11 +329,16 @@ class VoiceCommander {
       else if (lower.includes('jayanagar')) matchedLocation = locations.find(l => l.id === 'jayanagar');
     }
 
-    // 5. Extract Date Entity
+    // 5. Extract Date Entity (Support common phonetic spellings: tomorrow, tommorow, tomorow, tmrw)
     let targetDate: Date | undefined;
     let dateLabel: string | undefined;
 
-    if (lower.includes('tomorrow')) {
+    if (
+      lower.includes('tomorrow') || 
+      lower.includes('tommorow') || 
+      lower.includes('tomorow') || 
+      lower.includes('tmrw')
+    ) {
       const d = new Date();
       d.setDate(d.getDate() + 1);
       targetDate = d;
