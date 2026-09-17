@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import TopHeader from './components/TopHeader';
 import LocationSelector from './components/LocationSelector';
@@ -43,27 +43,7 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(new Date(2025, 8, 16)); // Sep 16, 2025
   const [selectedTime, setSelectedTime] = useState('06:00 PM');
   const [timelineHour, setTimelineHour] = useState(18); // Default 18:00 (06:00 PM)
-  const [predictionResult, setPredictionResult] = useState<PredictionResultType | null>({
-    violations: 3.2,
-    riskLevel: 'high',
-    riskLabel: 'HIGH RISK',
-    location: 'MG Road',
-    area: 'Bengaluru',
-    date: '16 Sep 2025 (Tue)',
-    dayName: 'Tuesday',
-    time: '06:00 PM',
-    message: 'This location is likely to experience parking violations around this time.',
-    geohash: 'tdr1v9q',
-    featuresUsed: {
-      geohash: 'tdr1v9q',
-      hour_sin: -1.0,
-      hour_cos: 0.0,
-      day_sin: 0.7818,
-      day_cos: 0.6235,
-    },
-    isKnownHotspot: true,
-    modelType: 'CatBoost Poisson Regressor (.cbm)',
-  });
+  const [predictionResult, setPredictionResult] = useState<PredictionResultType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [activeNav, setActiveNav] = useState('home');
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -83,27 +63,48 @@ function App() {
     setTimeout(() => setNotification(null), 2500);
   };
 
+  // Dynamic CatBoost Prediction Runner
+  const runPrediction = useCallback(async (
+    locId: string,
+    date: Date,
+    time: string,
+    triggerAudioAlert: boolean = false
+  ) => {
+    const loc = locations.find(l => l.id === locId) || locations[0];
+    try {
+      const result = await fetchCatBoostPrediction(loc, date, time);
+      setPredictionResult(result);
+      if (triggerAudioAlert) {
+        if (result.riskLevel === 'very-high' || result.riskLevel === 'high') {
+          audioFx.playAlert();
+        } else {
+          audioFx.playSuccess();
+        }
+      }
+      return result;
+    } catch (err) {
+      console.error('Prediction error:', err);
+      return null;
+    }
+  }, []);
+
+  // Initial load inference
+  useEffect(() => {
+    runPrediction(selectedLocation, selectedDate, selectedTime, false);
+  }, []);
+
   const handlePredict = useCallback(async () => {
     audioFx.playClick();
     setIsLoading(true);
-    const loc = locations.find(l => l.id === selectedLocation) || locations[0];
     try {
-      const result = await fetchCatBoostPrediction(loc, selectedDate, selectedTime);
-      setPredictionResult(result);
-      if (result.riskLevel === 'very-high' || result.riskLevel === 'high') {
-        audioFx.playAlert();
-      } else {
-        audioFx.playSuccess();
+      const result = await runPrediction(selectedLocation, selectedDate, selectedTime, true);
+      if (result) {
+        showNotification(`CatBoost Prediction: ${result.violations} violations/hr — ${result.riskLabel}`);
       }
-      showNotification(`CatBoost Prediction: ${result.violations} violations/hr — ${result.riskLabel}`);
-    } catch (err) {
-      console.error(err);
-      audioFx.playSuccess();
-      showNotification('Inference completed');
     } finally {
       setIsLoading(false);
     }
-  }, [selectedLocation, selectedDate, selectedTime]);
+  }, [selectedLocation, selectedDate, selectedTime, runPrediction]);
 
   const handleNavChange = (navId: string) => {
     audioFx.playWhoosh();
@@ -131,15 +132,14 @@ function App() {
   const handleDateChange = (newDate: Date) => {
     audioFx.playClick();
     setSelectedDate(newDate);
-    const dateStr = formatDate(newDate);
-    setPredictionResult((prev) => prev ? { ...prev, date: dateStr } : null);
+    runPrediction(selectedLocation, newDate, selectedTime, false);
   };
 
   const handleTimeChange = (newTime: string) => {
     audioFx.playClick();
     setSelectedTime(newTime);
     setTimelineHour(timeStringToHour(newTime));
-    setPredictionResult((prev) => prev ? { ...prev, time: newTime } : null);
+    runPrediction(selectedLocation, selectedDate, newTime, false);
     showNotification(`Time set to ${newTime}`);
   };
 
@@ -147,15 +147,16 @@ function App() {
     setTimelineHour(hour);
     const timeStr = hourToTimeString(hour);
     setSelectedTime(timeStr);
-    setPredictionResult((prev) => prev ? { ...prev, time: timeStr } : null);
-  }, []);
+    runPrediction(selectedLocation, selectedDate, timeStr, false);
+  }, [selectedLocation, selectedDate, runPrediction]);
 
   const handleLocationChange = (newLocId: string) => {
     audioFx.playRadar();
     setSelectedLocation(newLocId);
+    runPrediction(newLocId, selectedDate, selectedTime, false);
     const loc = locations.find(l => l.id === newLocId);
     if (loc) {
-      setPredictionResult((prev) => prev ? { ...prev, location: loc.name, area: loc.area } : null);
+      showNotification(`Loaded ${loc.name} AI telemetry`);
     }
   };
 

@@ -60,7 +60,16 @@ if os.path.exists(actual_geohash_path):
         top_geohashes = json.load(f)
 
 top_geohashes_set = set(top_geohashes)
-default_geohash = top_geohashes[0] if top_geohashes else "tdr1v7m"
+default_geohash = top_geohashes[0] if top_geohashes else "tdr1v9q"
+
+# Pre-cache decoded coordinates for instant nearest-neighbor matching
+decoded_top_geohashes = []
+for gh in top_geohashes:
+    try:
+        glat, glng = pgh.decode(gh)
+        decoded_top_geohashes.append((gh, glat, glng))
+    except Exception:
+        pass
 
 
 class PredictionRequest(BaseModel):
@@ -137,23 +146,17 @@ def parse_day_of_week(date_str: str) -> tuple[int, str]:
 
 def find_closest_known_geohash(target_lat: float, target_lng: float) -> str:
     """Finds the geographically closest geohash from trained top_geohashes."""
-    if not top_geohashes:
+    if not decoded_top_geohashes:
         return default_geohash
 
     best_gh = default_geohash
     min_dist_sq = float('inf')
 
-    # Sample top candidates for speed
-    candidates = top_geohashes[:150]
-    for gh in candidates:
-        try:
-            glat, glng = pgh.decode(gh)
-            d2 = (glat - target_lat)**2 + (glng - target_lng)**2
-            if d2 < min_dist_sq:
-                min_dist_sq = d2
-                best_gh = gh
-        except Exception:
-            continue
+    for gh, glat, glng in decoded_top_geohashes:
+        d2 = (glat - target_lat)**2 + (glng - target_lng)**2
+        if d2 < min_dist_sq:
+            min_dist_sq = d2
+            best_gh = gh
 
     return best_gh
 

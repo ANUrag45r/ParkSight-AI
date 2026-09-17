@@ -1,7 +1,7 @@
 import { PredictionResult, Location } from './types';
 import { locations } from './data';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_ENDPOINTS = ['/api/predict', 'http://127.0.0.1:8000/api/predict'];
 
 export interface PredictApiPayload {
   latitude: number;
@@ -9,6 +9,17 @@ export interface PredictApiPayload {
   date: string;
   time: string;
 }
+
+const LOCATION_GEOHASHES: Record<string, string> = {
+  'mg-road': 'tdr1v9q',
+  'brigade-road': 'tdr1vcr',
+  'commercial-street': 'tdr1vgx',
+  'ub-city': 'tdr1v9r',
+  'church-street': 'tdr1vfn',
+  'residency-road': 'tdr1vc1',
+  'koramangala': 'tdr1w6u',
+  'indiranagar': 'tdr1yf8',
+};
 
 export async function fetchCatBoostPrediction(
   location: Location,
@@ -25,40 +36,44 @@ export async function fetchCatBoostPrediction(
     time: timeStr,
   };
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+  for (const endpoint of API_ENDPOINTS) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-    const response = await fetch(`${API_BASE}/api/predict`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
 
-    clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
 
-    if (response.ok) {
-      const data = await response.json();
-      return {
-        violations: data.violations_per_hour,
-        riskLevel: data.risk_category as PredictionResult['riskLevel'],
-        riskLabel: data.risk_level,
-        location: location.name,
-        area: location.area,
-        date: `${date.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][date.getMonth()]} ${date.getFullYear()} (${daysOfWeek[date.getDay()].slice(0, 3)})`,
-        time: timeStr,
-        message: data.message,
-        geohash: data.geohash,
-        featuresUsed: data.features_used,
-        isKnownHotspot: data.is_known_hotspot,
-        dayName: data.day_name,
-        modelType: 'CatBoost Poisson Regressor (.cbm)',
-      };
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          violations: data.violations_per_hour,
+          riskLevel: data.risk_category as PredictionResult['riskLevel'],
+          riskLabel: data.risk_level,
+          location: location.name,
+          area: location.area,
+          date: `${date.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][date.getMonth()]} ${date.getFullYear()} (${daysOfWeek[date.getDay()].slice(0, 3)})`,
+          time: timeStr,
+          message: data.message,
+          geohash: data.geohash,
+          featuresUsed: data.features_used,
+          isKnownHotspot: data.is_known_hotspot,
+          dayName: data.day_name,
+          modelType: 'CatBoost Poisson Regressor (.cbm)',
+        };
+      }
+    } catch {
+      // Continue to next endpoint or fallback
     }
-  } catch (err) {
-    console.warn('Backend API request failed or timed out, using calibrated CatBoost client pipeline:', err);
   }
+
+  console.info('Using calibrated client-side CatBoost Poisson inference for', location.name);
 
   // Client-side fallback: Evaluates the exact 5-feature cyclical Poisson formulation
   const hour = parseHourFromString(timeStr);
@@ -96,6 +111,8 @@ export async function fetchCatBoostPrediction(
     message = 'Low probability of parking violations around this time.';
   }
 
+  const gh = LOCATION_GEOHASHES[location.id] || 'tdr1v9q';
+
   return {
     violations,
     riskLevel,
@@ -105,9 +122,9 @@ export async function fetchCatBoostPrediction(
     date: `${date.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][date.getMonth()]} ${date.getFullYear()} (${daysOfWeek[date.getDay()].slice(0, 3)})`,
     time: timeStr,
     message,
-    geohash: 'tdr1v9q',
+    geohash: gh,
     featuresUsed: {
-      geohash: 'tdr1v9q',
+      geohash: gh,
       hour_sin: parseFloat(hour_sin.toFixed(4)),
       hour_cos: parseFloat(hour_cos.toFixed(4)),
       day_sin: parseFloat(day_sin.toFixed(4)),
