@@ -1,4 +1,3 @@
-/* App v0.2: Multi-View Routing and Dynamic Panel State */
 import { useState, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import TopHeader from './components/TopHeader';
