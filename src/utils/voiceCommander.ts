@@ -18,7 +18,7 @@ export interface ParsedVoiceCommand {
   summary: string;
 }
 
-export type VoiceState = 'idle' | 'listening' | 'processing' | 'error' | 'unsupported';
+export type VoiceState = 'idle' | 'requesting' | 'listening' | 'processing' | 'success' | 'error' | 'unsupported';
 
 interface SpeechRecognitionEvent {
   resultIndex: number;
@@ -37,50 +37,51 @@ interface SpeechRecognitionInstance {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
+  maxAlternatives: number;
   start: () => void;
   stop: () => void;
   abort: () => void;
   onstart: (() => void) | null;
   onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: { error: string }) => void) | null;
+  onerror: ((event: { error: string; message?: string }) => void) | null;
   onend: (() => void) | null;
 }
 
 class VoiceCommander {
-  private recognition: SpeechRecognitionInstance | null = null;
+  private activeRecognition: SpeechRecognitionInstance | null = null;
   private state: VoiceState = 'idle';
   private stateListeners: Set<(state: VoiceState, transcript?: string) => void> = new Set();
   private commandListeners: Set<(cmd: ParsedVoiceCommand) => void> = new Set();
-  private isAvailable: boolean = false;
+  private lastSpokenText: string = '';
+  private silenceTimer: number | null = null;
 
   constructor() {
+    // Check initial availability
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = 
-        (window as unknown as { SpeechRecognition?: new () => SpeechRecognitionInstance }).SpeechRecognition ||
-        (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionInstance }).webkitSpeechRecognition;
-
-      if (SpeechRecognition) {
-        try {
-          this.recognition = new SpeechRecognition();
-          this.recognition.continuous = false;
-          this.recognition.interimResults = true;
-          this.recognition.lang = 'en-US';
-          this.isAvailable = true;
-          this.setupListeners();
-        } catch (e) {
-          console.warn('Speech recognition setup failed:', e);
-          this.isAvailable = false;
-        }
+      const hasSpeech = !!(
+        (window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition ||
+        (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
+      );
+      if (!hasSpeech) {
+        this.state = 'unsupported';
       }
     }
   }
 
   public isSupported(): boolean {
-    return this.isAvailable && this.recognition !== null;
+    if (typeof window === 'undefined') return false;
+    return !!(
+      (window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition ||
+      (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
+    );
   }
 
   public getState(): VoiceState {
     return this.state;
+  }
+
+  public getLastSpokenText(): string {
+    return this.lastSpokenText;
   }
 
   public onStateChange(fn: (state: VoiceState, transcript?: string) => void): () => void {
@@ -95,74 +96,169 @@ class VoiceCommander {
 
   private setState(state: VoiceState, transcript?: string): void {
     this.state = state;
+    if (transcript !== undefined) {
+      this.lastSpokenText = transcript;
+    }
     this.stateListeners.forEach((fn) => fn(state, transcript));
   }
 
-  private setupListeners(): void {
-    if (!this.recognition) return;
-
-    this.recognition.onstart = () => {
-      audioFx.playVoiceTrigger();
-      this.setState('listening', '');
-    };
-
-    this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interim = '';
-      let final = '';
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const res = event.results[i];
-        if (res.isFinal) {
-          final += res[0].transcript;
-        } else {
-          interim += res[0].transcript;
-        }
-      }
-
-      const text = final || interim;
-      this.setState('listening', text);
-
-      if (final) {
-        this.processTranscript(final.trim());
-      }
-    };
-
-    this.recognition.onerror = (e) => {
-      console.warn('Voice recognition error:', e.error);
-      this.setState('error', e.error === 'no-speech' ? 'No speech detected' : 'Microphone error');
-      setTimeout(() => this.setState('idle'), 2500);
-    };
-
-    this.recognition.onend = () => {
-      if (this.state === 'listening') {
-        this.setState('idle');
-      }
-    };
-  }
-
-  public startListening(): void {
-    if (!this.recognition) {
-      this.setState('unsupported', 'Speech recognition is not supported in this browser.');
+  /**
+   * Request microphone permission & start listening with continuous recognition
+   */
+  public async startListening(): Promise<void> {
+    if (!this.isSupported()) {
+      this.setState('unsupported', 'Speech recognition is not supported in this browser. You can type commands in the search bar.');
       return;
     }
-    try {
-      this.recognition.start();
-    } catch {
-      // In case it's already started
+
+    // Stop any existing instance
+    this.cleanup();
+
+    // 1. Explicitly prompt / verify microphone permission via getUserMedia
+    this.setState('requesting', 'Requesting microphone access...');
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
-        this.recognition.stop();
-        setTimeout(() => this.recognition?.start(), 150);
-      } catch {}
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Stop audio tracks immediately so hardware is unblocked for Web Speech API
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (err: unknown) {
+        console.warn('Microphone permission check failed:', err);
+        this.setState(
+          'error',
+          'Microphone permission blocked. Please click the lock or camera icon in your browser address bar to allow microphone access.'
+        );
+        return;
+      }
+    }
+
+    try {
+      const SpeechRecognitionClass =
+        (window as unknown as { SpeechRecognition?: new () => SpeechRecognitionInstance }).SpeechRecognition ||
+        (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionInstance }).webkitSpeechRecognition;
+
+      if (!SpeechRecognitionClass) {
+        this.setState('unsupported', 'Speech recognition API not available.');
+        return;
+      }
+
+      const recog = new SpeechRecognitionClass();
+      recog.continuous = true;
+      recog.interimResults = true;
+      recog.maxAlternatives = 1;
+      // Use user's browser language if English, else fallback to en-IN (Bangalore locale)
+      const userLang = navigator.language || 'en-US';
+      recog.lang = userLang.toLowerCase().startsWith('en') ? userLang : 'en-IN';
+
+      let accumulatedFinal = '';
+
+      const clearTimer = () => {
+        if (this.silenceTimer) {
+          window.clearTimeout(this.silenceTimer);
+          this.silenceTimer = null;
+        }
+      };
+
+      const resetSilenceTimer = (text: string) => {
+        clearTimer();
+        // Automatically finalize and process if user pauses for 2 seconds
+        this.silenceTimer = window.setTimeout(() => {
+          if (text.trim().length > 0) {
+            this.stopListening();
+            this.processTranscript(text.trim());
+          }
+        }, 2000);
+      };
+
+      recog.onstart = () => {
+        audioFx.playVoiceTrigger();
+        accumulatedFinal = '';
+        this.setState('listening', '');
+      };
+
+      recog.onresult = (event: SpeechRecognitionEvent) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const res = event.results[i];
+          if (res.isFinal) {
+            accumulatedFinal += (accumulatedFinal ? ' ' : '') + res[0].transcript;
+          } else {
+            interim += res[0].transcript;
+          }
+        }
+
+        const fullSpeech = (accumulatedFinal + ' ' + interim).trim();
+        if (fullSpeech) {
+          this.setState('listening', fullSpeech);
+          resetSilenceTimer(fullSpeech);
+        }
+      };
+
+      recog.onerror = (e) => {
+        console.warn('Speech recognition error event:', e.error);
+        clearTimer();
+        if (e.error === 'no-speech') {
+          if (accumulatedFinal.trim()) {
+            this.processTranscript(accumulatedFinal.trim());
+          } else {
+            this.setState('error', 'No speech detected. Please speak clearly into your microphone.');
+          }
+        } else if (e.error === 'not-allowed') {
+          this.setState(
+            'error',
+            'Microphone permission blocked. Please enable microphone access in your browser settings.'
+          );
+        } else if (e.error === 'network') {
+          this.setState('error', 'Network error occurred during speech capture.');
+        } else {
+          this.setState('error', `Voice capture error: ${e.error}`);
+        }
+      };
+
+      recog.onend = () => {
+        clearTimer();
+        if (this.state === 'listening') {
+          if (accumulatedFinal.trim()) {
+            this.processTranscript(accumulatedFinal.trim());
+          } else {
+            this.setState('idle', this.lastSpokenText);
+          }
+        }
+      };
+
+      this.activeRecognition = recog;
+      recog.start();
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      this.setState('error', 'Could not initialize speech recognition. Try typing your command.');
     }
   }
 
   public stopListening(): void {
-    if (this.recognition) {
+    if (this.silenceTimer) {
+      window.clearTimeout(this.silenceTimer);
+      this.silenceTimer = null;
+    }
+    if (this.activeRecognition) {
       try {
-        this.recognition.stop();
+        this.activeRecognition.stop();
       } catch {}
     }
-    this.setState('idle');
+    if (this.state === 'listening' || this.state === 'requesting') {
+      this.setState('idle', this.lastSpokenText);
+    }
+  }
+
+  private cleanup(): void {
+    if (this.silenceTimer) {
+      window.clearTimeout(this.silenceTimer);
+      this.silenceTimer = null;
+    }
+    if (this.activeRecognition) {
+      try {
+        this.activeRecognition.abort();
+      } catch {}
+      this.activeRecognition = null;
+    }
   }
 
   /**
@@ -308,16 +404,30 @@ class VoiceCommander {
     };
   }
 
-  private processTranscript(transcript: string): void {
-    const cmd = this.parseText(transcript);
-    this.setState('processing', cmd.summary);
+  public processTranscript(transcript: string): void {
+    const clean = transcript.trim();
+    if (!clean) {
+      this.setState('idle', '');
+      return;
+    }
+    this.lastSpokenText = clean;
+    const cmd = this.parseText(clean);
+    this.setState('processing', clean);
     audioFx.playSuccess();
 
     this.commandListeners.forEach((fn) => fn(cmd));
 
     setTimeout(() => {
-      this.setState('idle');
-    }, 2400);
+      this.setState('success', clean);
+    }, 400);
+
+    setTimeout(() => {
+      this.setState('idle', clean);
+    }, 3500);
+  }
+
+  public manualExecute(text: string): void {
+    this.processTranscript(text);
   }
 }
 
