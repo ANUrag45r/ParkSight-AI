@@ -22,7 +22,7 @@ def train_or_initialize_model(force: bool = False):
         print(f"[*] Found existing model at {MODEL_PATH} and geohashes at {GEOHASHES_PATH}")
         return
 
-    print("=== ParkSight AI: Initializing Spatiotemporal CatBoost Pipeline ===")
+    print("=== SightSpot_AI: Initializing Spatiotemporal CatBoost Pipeline ===")
 
     if os.path.exists(CSV_PATH):
         print(f"[*] Loading raw telemetry data from {CSV_PATH}...")
