@@ -1,4 +1,4 @@
-# ParkSight AI (SlotSight AI) 🚗🏙️
+# SightSpot_AI (SlotSight AI) 🚗🏙️
 > **Smarter Parking. Safer Cities.**  
 > An AI-powered smart-city command center predicting urban parking violations using CatBoost Poisson regression and spatiotemporal geohash grids.
 
