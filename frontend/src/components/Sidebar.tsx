@@ -9,6 +9,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
+import { MagneticDock, ExpandedMagneticDock } from './MagneticDock';
 
 const navItems = [
   { id: 'home', label: 'Home', icon: Home },
@@ -28,7 +29,6 @@ interface SidebarProps {
 
 const Sidebar = ({ activeNav, onNavChange, isCollapsed: propCollapsed, onToggleCollapse }: SidebarProps) => {
   const [internalCollapsed, setInternalCollapsed] = useState(false);
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const isCollapsed = propCollapsed !== undefined ? propCollapsed : internalCollapsed;
 
@@ -42,11 +42,13 @@ const Sidebar = ({ activeNav, onNavChange, isCollapsed: propCollapsed, onToggleC
 
   return (
     <aside
-      className="flex flex-col h-screen flex-shrink-0 select-none overflow-x-hidden transition-all duration-300 ease-in-out relative z-30"
+      className="flex flex-col h-screen flex-shrink-0 select-none transition-all duration-300 ease-in-out relative z-30"
       style={{
-        width: isCollapsed ? '72px' : '260px',
-        background: 'linear-gradient(to bottom, #050D1C, #020617)',
-        borderRight: '1px solid rgba(80, 130, 255, 0.15)',
+        width: isCollapsed ? '76px' : '260px',
+        background: 'linear-gradient(to bottom, #0D0F17, #090B10)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.07)',
+        overflowX: isCollapsed ? 'visible' : 'hidden',
+        overflowY: 'auto',
       }}
     >
       {/* Brand Section */}
@@ -123,75 +125,42 @@ const Sidebar = ({ activeNav, onNavChange, isCollapsed: propCollapsed, onToggleC
       </div>
 
       {/* Navigation Section */}
-      <nav className={`mt-6 flex flex-col gap-1.5 ${isCollapsed ? 'px-2 items-center' : 'px-3'}`}>
-        {navItems.map((item) => {
-          const isActive = activeNav === item.id;
-          const isHovered = hoveredItem === item.id;
-          const Icon = item.icon;
-          
-          if (isCollapsed) {
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onNavChange(item.id)}
-                onMouseEnter={() => setHoveredItem(item.id)}
-                onMouseLeave={() => setHoveredItem(null)}
-                title={item.label}
-                className={`relative flex items-center justify-center w-11 h-11 rounded-xl cursor-pointer transition-all duration-200 border-none outline-none group ${
-                  isActive ? 'text-white' : 'text-slate-400 hover:text-slate-100'
-                }`}
-                style={
-                  isActive
-                    ? {
-                        background: 'linear-gradient(135deg, #2563FF, #6D4AFF)',
-                        boxShadow: '0 0 18px rgba(70,70,255,0.35)',
-                      }
-                    : {
-                        background: isHovered ? 'rgba(255,255,255,0.08)' : 'transparent',
-                      }
-                }
-              >
-                <Icon size={19} className={`transition-colors duration-200 ${isActive ? 'text-white' : isHovered ? 'text-slate-200' : ''}`} />
-                {isActive && (
-                  <span className="absolute -right-0.5 top-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22D3EE]" />
-                )}
-              </button>
-            );
-          }
-
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onNavChange(item.id)}
-              onMouseEnter={() => setHoveredItem(item.id)}
-              onMouseLeave={() => setHoveredItem(null)}
-              className={`flex items-center gap-3 py-2.5 px-3.5 rounded-xl cursor-pointer transition-all duration-200 w-full text-left border-none outline-none ${
-                isActive
-                  ? 'text-white'
-                  : 'text-slate-400 hover:text-slate-100'
-              }`}
-              style={
-                isActive
-                  ? {
-                      background: 'linear-gradient(135deg, #2563FF, #6D4AFF)',
-                      boxShadow: '0 0 20px rgba(70,70,255,0.3)',
-                    }
-                  : {
-                      background: isHovered ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    }
-              }
-            >
-              <Icon size={19} className={`flex-shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : isHovered ? 'text-slate-200' : ''}`} />
-              <span className="font-medium text-sm whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
-              {isActive && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white/80 flex-shrink-0" />
-              )}
-            </button>
-          );
-        })}
-      </nav>
+      {isCollapsed ? (
+        <div className="mt-5 flex flex-col items-center justify-center px-1">
+          <MagneticDock
+            items={navItems.map((item) => {
+              const Icon = item.icon;
+              return {
+                id: item.id,
+                label: item.label,
+                icon: <Icon size={20} />,
+                isActive: activeNav === item.id,
+                onClick: () => onNavChange(item.id),
+              };
+            })}
+            iconSize={42}
+            maxScale={1.38}
+            magneticDistance={100}
+            position="left"
+            showLabels={true}
+          />
+        </div>
+      ) : (
+        <div className="mt-6">
+          <ExpandedMagneticDock
+            items={navItems.map((item) => {
+              const Icon = item.icon;
+              return {
+                id: item.id,
+                label: item.label,
+                icon: <Icon size={19} />,
+                isActive: activeNav === item.id,
+                onClick: () => onNavChange(item.id),
+              };
+            })}
+          />
+        </div>
+      )}
 
       {/* Bottom Section */}
       {isCollapsed ? (
@@ -209,7 +178,7 @@ const Sidebar = ({ activeNav, onNavChange, isCollapsed: propCollapsed, onToggleC
         </div>
       ) : (
         <div className="mt-auto flex flex-col pb-4">
-          <div className="w-full h-28 relative overflow-hidden flex items-end border-b border-[rgba(80,130,255,0.15)] bg-gradient-to-t from-[#050D20] to-transparent">
+          <div className="w-full h-28 relative overflow-hidden flex items-end border-b border-white/[0.08] bg-gradient-to-t from-[#090B10] to-transparent">
           <svg 
             width="260" 
             height="110" 
@@ -221,12 +190,12 @@ const Sidebar = ({ activeNav, onNavChange, isCollapsed: propCollapsed, onToggleC
             <defs>
               {/* Building Gradient */}
               <linearGradient id="cyberBuilding1" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0E214A" />
-                <stop offset="100%" stopColor="#060D1E" />
+                <stop offset="0%" stopColor="#181D29" />
+                <stop offset="100%" stopColor="#0B0D14" />
               </linearGradient>
               <linearGradient id="cyberBuilding2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#12285C" />
-                <stop offset="100%" stopColor="#081126" />
+                <stop offset="0%" stopColor="#1E2433" />
+                <stop offset="100%" stopColor="#0E111A" />
               </linearGradient>
               <linearGradient id="glassSkybridge" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="rgba(34, 211, 238, 0.4)" />
@@ -333,9 +302,9 @@ const Sidebar = ({ activeNav, onNavChange, isCollapsed: propCollapsed, onToggleC
             <rect x="216" y="60" width="4" height="3" rx="0.5" fill="#22D3EE" opacity="0.85" className="animate-window-pulse" />
 
             {/* Cyber City Roadway */}
-            <rect x="0" y="84" width="260" height="26" fill="#050B18" />
+            <rect x="0" y="84" width="260" height="26" fill="#090B10" />
             {/* Top Curb Neon Edge */}
-            <line x1="0" y1="84" x2="260" y2="84" stroke="rgba(34, 211, 238, 0.45)" strokeWidth="1" />
+            <line x1="0" y1="84" x2="260" y2="84" stroke="rgba(34, 211, 238, 0.35)" strokeWidth="1" />
             {/* Animated Road Dash Lane Line */}
             <line 
               x1="0" 
@@ -387,11 +356,11 @@ const Sidebar = ({ activeNav, onNavChange, isCollapsed: propCollapsed, onToggleC
                 <line x1="6" y1="94" x2="34" y2="94" stroke="#2563FF" strokeWidth="0.8" />
 
                 {/* Rear Cyber Wheel */}
-                <circle cx="9" cy="97" r="3.2" fill="#050B18" stroke="#22D3EE" strokeWidth="0.9" />
+                <circle cx="9" cy="97" r="3.2" fill="#090B10" stroke="#22D3EE" strokeWidth="0.9" />
                 <circle cx="9" cy="97" r="1.2" fill="#22D3EE" />
 
                 {/* Front Cyber Wheel */}
-                <circle cx="31" cy="97" r="3.2" fill="#050B18" stroke="#22D3EE" strokeWidth="0.9" />
+                <circle cx="31" cy="97" r="3.2" fill="#090B10" stroke="#22D3EE" strokeWidth="0.9" />
                 <circle cx="31" cy="97" r="1.2" fill="#22D3EE" />
               </g>
             </g>
