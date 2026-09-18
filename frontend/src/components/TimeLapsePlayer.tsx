@@ -87,19 +87,19 @@ export const TimeLapsePlayer = ({
 
   return (
     <div 
-      className="rounded-xl px-3.5 py-2.5 border border-[rgba(80,130,255,0.25)] shadow-2xl backdrop-blur-md flex flex-col gap-2 transition-all duration-300"
+      className="rounded-xl px-3.5 py-2.5 border border-white/[0.08] shadow-2xl backdrop-blur-md flex flex-col gap-2 transition-all duration-300"
       style={{
-        background: 'rgba(7, 17, 38, 0.94)',
+        background: 'rgba(14, 18, 27, 0.94)',
         boxShadow: isPeakHour 
-          ? '0 0 25px rgba(233,70,255,0.3), 0 10px 30px rgba(0,0,0,0.5)' 
-          : '0 10px 30px rgba(0,0,0,0.5)',
+          ? '0 0 25px rgba(233,70,255,0.25), 0 10px 30px rgba(0,0,0,0.6)' 
+          : '0 10px 30px rgba(0,0,0,0.6)',
       }}
     >
       {/* Top Row: Title, Diurnal Icon, Time Display, Speed & Play Controls */}
       <div className="flex items-center justify-between gap-3">
         {/* Left: Time display & Icon */}
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-lg bg-[rgba(80,130,255,0.12)] border border-[rgba(80,130,255,0.2)]">
+          <div className="p-1 rounded-lg bg-white/[0.06] border border-white/[0.08]">
             {getDiurnalIcon(currentHour)}
           </div>
           <div className="flex flex-col">
@@ -123,7 +123,7 @@ export const TimeLapsePlayer = ({
           {/* Speed Toggle */}
           <button
             onClick={cycleSpeed}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-slate-300 hover:text-white border border-[rgba(80,130,255,0.2)] hover:bg-white/10 transition-colors cursor-pointer outline-none"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-slate-300 hover:text-white border border-white/[0.08] hover:bg-white/10 transition-colors cursor-pointer outline-none"
             title="Change Playback Speed (1x, 2x, 4x)"
           >
             <FastForward size={11} className="text-cyan-400" />

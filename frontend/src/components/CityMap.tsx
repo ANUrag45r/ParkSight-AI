@@ -373,8 +373,8 @@ const CityMap = ({
         className: 'custom-hotspot-marker',
         html: `
           <div style="position: relative; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px;">
-            <div style="position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #2563FF; border: 2px solid #050B18; box-shadow: 0 0 10px #2563FF;"></div>
-            <div style="position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.65); background: rgba(5,11,24,0.75); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(80,130,255,0.2); pointer-events: none;">
+            <div style="position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #2563FF; border: 2px solid #0B0D14; box-shadow: 0 0 10px #2563FF;"></div>
+            <div style="position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.75); background: rgba(14,18,27,0.88); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); pointer-events: none;">
               ${loc.name}
             </div>
           </div>
@@ -558,10 +558,10 @@ const CityMap = ({
           className={`flex items-center justify-center rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-200 h-[36px] cursor-pointer outline-none ${
             is3D 
               ? 'text-cyan-300 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.35)]' 
-              : 'text-white border-[rgba(80,130,255,0.25)] hover:bg-white/10'
+              : 'text-white border-white/[0.1] hover:bg-white/10'
           }`}
           style={{
-            background: is3D ? 'rgba(34,211,238,0.15)' : 'rgba(7,17,38,0.9)',
+            background: is3D ? 'rgba(34,211,238,0.15)' : 'rgba(14,18,27,0.92)',
             borderWidth: '1px',
             backdropFilter: 'blur(10px)',
           }}
@@ -579,10 +579,10 @@ const CityMap = ({
           className={`flex items-center justify-center rounded-xl w-[36px] h-[36px] transition-all duration-200 cursor-pointer outline-none ${
             mapMode === 'satellite'
               ? 'text-cyan-300 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]'
-              : 'text-white border-[rgba(80,130,255,0.25)] hover:bg-white/10'
+              : 'text-white border-white/[0.1] hover:bg-white/10'
           }`}
           style={{
-            background: mapMode === 'satellite' ? 'rgba(34,211,238,0.15)' : 'rgba(7,17,38,0.9)',
+            background: mapMode === 'satellite' ? 'rgba(34,211,238,0.15)' : 'rgba(14,18,27,0.92)',
             borderWidth: '1px',
             backdropFilter: 'blur(10px)',
           }}
@@ -601,10 +601,10 @@ const CityMap = ({
           className={`flex items-center justify-center rounded-xl w-[36px] h-[36px] transition-all duration-200 cursor-pointer outline-none ${
             showTraffic
               ? 'text-emerald-400 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
-              : 'text-slate-500 border-[rgba(80,130,255,0.25)] hover:bg-white/10'
+              : 'text-slate-400 border-white/[0.1] hover:bg-white/10'
           }`}
           style={{
-            background: showTraffic ? 'rgba(16,185,129,0.15)' : 'rgba(7,17,38,0.9)',
+            background: showTraffic ? 'rgba(16,185,129,0.15)' : 'rgba(14,18,27,0.92)',
             borderWidth: '1px',
             backdropFilter: 'blur(10px)',
           }}
@@ -623,10 +623,10 @@ const CityMap = ({
           className={`flex items-center justify-center rounded-xl w-[36px] h-[36px] transition-all duration-200 cursor-pointer outline-none ${
             showHeatmap
               ? 'text-[#E946FF] border-[#E946FF] shadow-[0_0_15px_rgba(233,70,255,0.3)]'
-              : 'text-slate-500 border-[rgba(80,130,255,0.25)] hover:bg-white/10'
+              : 'text-slate-400 border-white/[0.1] hover:bg-white/10'
           }`}
           style={{
-            background: showHeatmap ? 'rgba(233,70,255,0.15)' : 'rgba(7,17,38,0.9)',
+            background: showHeatmap ? 'rgba(233,70,255,0.15)' : 'rgba(14,18,27,0.92)',
             borderWidth: '1px',
             backdropFilter: 'blur(10px)',
           }}
@@ -641,9 +641,9 @@ const CityMap = ({
             audioFx.playClick();
             handleRecenter();
           }}
-          className="flex items-center justify-center rounded-xl w-[36px] h-[36px] text-white border border-[rgba(80,130,255,0.25)] hover:bg-white/10 hover:text-cyan-400 transition-all duration-200 cursor-pointer outline-none"
+          className="flex items-center justify-center rounded-xl w-[36px] h-[36px] text-white border border-white/[0.1] hover:bg-white/10 hover:text-cyan-400 transition-all duration-200 cursor-pointer outline-none"
           style={{
-            background: 'rgba(7,17,38,0.9)',
+            background: 'rgba(14,18,27,0.92)',
             backdropFilter: 'blur(10px)',
           }}
           title="Recenter on Selected Pin"
@@ -653,15 +653,15 @@ const CityMap = ({
 
         {/* Zoom Controls */}
         <div 
-          className="flex flex-col rounded-xl overflow-hidden border border-[rgba(80,130,255,0.25)] shadow-lg"
-          style={{ background: 'rgba(7,17,38,0.9)', backdropFilter: 'blur(10px)' }}
+          className="flex flex-col rounded-xl overflow-hidden border border-white/[0.1] shadow-lg"
+          style={{ background: 'rgba(14,18,27,0.92)', backdropFilter: 'blur(10px)' }}
         >
           <button
             onClick={() => {
               audioFx.playClick();
               handleZoomIn();
             }}
-            className="flex items-center justify-center w-[36px] h-[34px] text-white hover:bg-white/10 hover:text-cyan-400 transition-all duration-200 cursor-pointer outline-none border-b border-[rgba(80,130,255,0.2)]"
+            className="flex items-center justify-center w-[36px] h-[34px] text-white hover:bg-white/10 hover:text-cyan-400 transition-all duration-200 cursor-pointer outline-none border-b border-white/[0.08]"
             title="Zoom In"
           >
             <Plus size={16} />
@@ -681,8 +681,8 @@ const CityMap = ({
 
       {/* BOTTOM-LEFT HUD: Smart City Violation Risk & Live Traffic Speed Legend */}
       <div 
-        className="absolute bottom-4 left-4 z-[400] rounded-xl p-3 border border-[rgba(80,130,255,0.2)] shadow-2xl backdrop-blur-md max-w-[210px]"
-        style={{ background: 'rgba(7, 17, 38, 0.92)' }}
+        className="absolute bottom-4 left-4 z-[400] rounded-xl p-3 border border-white/[0.08] shadow-2xl backdrop-blur-md max-w-[210px]"
+        style={{ background: 'rgba(14, 18, 27, 0.92)' }}
       >
         <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] font-bold text-white uppercase tracking-wider">Violation Risk</span>
@@ -690,7 +690,7 @@ const CityMap = ({
         </div>
 
         {/* Risk Categories */}
-        <div className="flex flex-col gap-1.5 pb-2 border-b border-[rgba(80,130,255,0.15)]">
+        <div className="flex flex-col gap-1.5 pb-2 border-b border-white/[0.08]">
           <div className="flex items-center justify-between text-[11px] text-slate-300">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-[#FF3158] shadow-[0_0_6px_#FF3158]" />
@@ -750,7 +750,7 @@ const CityMap = ({
       <div 
         className="absolute inset-0 z-[300] pointer-events-none" 
         style={{
-          boxShadow: 'inset 0 0 35px 15px rgba(5,11,24,0.7)',
+          boxShadow: 'inset 0 0 35px 15px rgba(11,13,20,0.85)',
         }}
       />
     </div>
