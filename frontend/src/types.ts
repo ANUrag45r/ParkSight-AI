@@ -28,6 +28,9 @@ export interface PredictionResult {
   isKnownHotspot?: boolean;
   dayName?: string;
   modelType?: string;
+  weatherCondition?: string;
+  weatherMultiplier?: number;
+  tacticalBriefing?: string;
 }
 
 export interface WeatherData {

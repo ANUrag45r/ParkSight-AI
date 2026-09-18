@@ -9,7 +9,7 @@ import CityMap from './components/CityMap';
 import PredictionResult from './components/PredictionResult';
 import FeatureStrip from './components/FeatureStrip';
 import { getPrediction, locations } from './data';
-import { fetchCatBoostPrediction } from './api';
+import { fetchCatBoostPrediction, fetchDispatchBriefing } from './api';
 import type { PredictionResult as PredictionResultType } from './types';
 import { audioFx } from './utils/audioFx';
 import { ParsedVoiceCommand } from './utils/voiceCommander';
@@ -74,6 +74,14 @@ function App() {
     try {
       const result = await fetchCatBoostPrediction(loc, date, time);
       setPredictionResult(result);
+      
+      // Async fetch the tactical briefing from LLM
+      fetchDispatchBriefing(result.location, result.violations, result.riskLevel, result.weatherCondition)
+        .then(briefing => {
+          setPredictionResult(prev => prev ? { ...prev, tacticalBriefing: briefing } : null);
+        })
+        .catch(console.error);
+
       if (triggerAudioAlert) {
         if (result.riskLevel === 'very-high' || result.riskLevel === 'high') {
           audioFx.playAlert();
@@ -203,6 +211,13 @@ function App() {
       fetchCatBoostPrediction(targetLoc, updatedDate, updatedTime)
         .then((res) => {
           setPredictionResult(res);
+          
+          fetchDispatchBriefing(res.location, res.violations, res.riskLevel, res.weatherCondition)
+            .then(briefing => {
+              setPredictionResult(prev => prev ? { ...prev, tacticalBriefing: briefing } : null);
+            })
+            .catch(console.error);
+
           if (res.riskLevel === 'very-high' || res.riskLevel === 'high') {
             audioFx.playAlert();
           } else {

@@ -66,6 +66,8 @@ export async function fetchCatBoostPrediction(
           isKnownHotspot: data.is_known_hotspot,
           dayName: data.day_name,
           modelType: 'CatBoost Poisson Regressor (.cbm)',
+          weatherCondition: data.weather_condition,
+          weatherMultiplier: data.weather_multiplier,
         };
       }
     } catch {
@@ -144,4 +146,33 @@ function parseHourFromString(timeStr: string): number {
   if (meridiem === 'PM' && h < 12) h += 12;
   else if (meridiem === 'AM' && h === 12) h = 0;
   return h;
+}
+
+export async function fetchDispatchBriefing(
+  location: string,
+  violations: number,
+  riskLevel: string,
+  weatherCondition?: string
+): Promise<string> {
+  for (const endpoint of API_ENDPOINTS.map(e => e.replace('/api/predict', '/api/dispatch-briefing'))) {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location,
+          violations,
+          risk_level: riskLevel,
+          weather: weatherCondition,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.briefing;
+      }
+    } catch {
+      // Continue
+    }
+  }
+  return "🚨 Tactical Briefing: System overloaded. Proceed with caution.";
 }

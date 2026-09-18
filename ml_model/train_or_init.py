@@ -5,9 +5,10 @@ import pandas as pd
 import pygeohash as pgh
 from catboost import CatBoostRegressor, Pool
 
-MODEL_PATH = "parksight_model.cbm"
-GEOHASHES_PATH = "top_geohashes.json"
-CSV_PATH = "bangalore_traffic_violations.csv"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "parksight_model.cbm")
+GEOHASHES_PATH = os.path.join(BASE_DIR, "top_geohashes.json")
+CSV_PATH = os.path.join(BASE_DIR, "bangalore_traffic_violations.csv")
 
 def train_or_initialize_model(force: bool = False):
     """
