@@ -84,11 +84,11 @@ const TimeSelector = ({ selectedTime, onTimeChange }: TimeSelectorProps) => {
           <div 
             className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto animate-count"
             style={{
-              background: 'rgba(7,17,38,0.95)',
-              border: '1px solid rgba(80,130,255,0.25)',
+              background: 'rgba(14, 18, 27, 0.96)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '12px',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
-              backdropFilter: 'blur(12px)',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(16px)',
             }}
           >
             {timeOptions.map((time) => {

@@ -78,21 +78,21 @@ const LocationSelector = ({
           onFocus={handleSearchFocus}
           onBlur={handleSearchBlur}
           placeholder="Search for a place..."
-          className="w-full bg-[rgba(13,27,58,0.8)] border rounded-xl py-2 pl-9 pr-8 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
+          className="w-full bg-[rgba(18,23,34,0.8)] border rounded-xl py-2 pl-9 pr-8 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
           style={{
-            borderColor: isFocused ? 'rgba(80,130,255,0.5)' : 'rgba(80,130,255,0.15)',
-            boxShadow: isFocused ? '0 0 12px rgba(37,99,255,0.15)' : 'none',
+            borderColor: isFocused ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)',
+            boxShadow: isFocused ? '0 0 16px rgba(0,0,0,0.4)' : 'none',
           }}
         />
 
         {/* Search Results Dropdown */}
         {showDropdown && (
           <div className="absolute z-50 w-full mt-1 max-h-44 overflow-y-auto animate-count" style={{
-            background: 'rgba(7,17,38,0.95)',
-            border: '1px solid rgba(80,130,255,0.25)',
+            background: 'rgba(14, 18, 27, 0.96)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '12px',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(12px)',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(16px)',
           }}>
             {filteredLocations.length === 0 ? (
               <div className="px-3 py-3 text-sm text-slate-500 text-center">No locations found</div>
@@ -173,7 +173,7 @@ const LocationSelector = ({
             <rect x="222" y="30" width="3" height="2" fill="#22D3EE" opacity="0.4" />
           </svg>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050B18] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0D14] via-transparent to-transparent" />
         <div className="absolute bottom-0 w-full flex items-center justify-between px-3 py-2 group-hover:bg-white/5 transition-colors duration-200">
           <div className="flex items-center gap-1.5">
             <MapPin size={12} className="text-white" />

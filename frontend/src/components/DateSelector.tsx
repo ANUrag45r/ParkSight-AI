@@ -259,19 +259,19 @@ const DateSelector = ({ selectedDate, onDateChange, onNotification }: DateSelect
       {/* Quick Month & Year Picker Dropdown */}
       {showMonthYearPicker && (
         <div 
-          className="absolute left-4 right-4 z-50 mt-1 p-3 rounded-xl border border-[rgba(80,130,255,0.3)] shadow-2xl backdrop-blur-xl animate-count"
-          style={{ background: 'rgba(7, 17, 38, 0.98)' }}
+          className="absolute left-4 right-4 z-50 mt-1 p-3 rounded-xl border border-white/[0.1] shadow-2xl backdrop-blur-xl animate-count"
+          style={{ background: 'rgba(14, 18, 27, 0.98)' }}
         >
-          <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[rgba(80,130,255,0.15)]">
+          <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-white/[0.08]">
             <span className="text-xs font-bold text-white uppercase tracking-wider">Jump to Month</span>
             {/* Year Selector */}
             <select
               value={year}
               onChange={(e) => setViewDate(new Date(Number(e.target.value), month, 1))}
-              className="bg-[rgba(13,27,58,0.9)] border border-[rgba(80,130,255,0.3)] rounded-lg px-2 py-0.5 text-xs text-white outline-none cursor-pointer"
+              className="bg-[rgba(20,24,36,0.9)] border border-white/[0.12] rounded-lg px-2 py-0.5 text-xs text-white outline-none cursor-pointer"
             >
               {[2024, 2025, 2026, 2027, 2028].map((y) => (
-                <option key={y} value={y} className="bg-[#071126] text-white">
+                <option key={y} value={y} className="bg-[#0e121b] text-white">
                   {y}
                 </option>
               ))}

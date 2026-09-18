@@ -12,7 +12,7 @@ const PredictionResult: React.FC<PredictionResultProps> = ({ result, isLoading }
 
   return (
     <div className="flex flex-col gap-3 w-full">
-      <div className="glass-card p-4 lg:p-5 flex flex-col md:flex-row items-center gap-5 w-full bg-[rgba(7,17,38,0.88)] border border-[rgba(80,130,255,0.22)] rounded-2xl shadow-xl relative">
+      <div className="glass-card p-4 lg:p-5 flex flex-col md:flex-row items-center gap-5 w-full bg-[rgba(14,18,27,0.88)] border border-white/[0.08] rounded-2xl shadow-xl relative">
       {isLoading ? (
         <div className="w-full flex items-center justify-center py-5">
           <div className="flex items-center gap-4 animate-pulse">
@@ -196,7 +196,7 @@ const PredictionResult: React.FC<PredictionResultProps> = ({ result, isLoading }
 
       {/* Tactical Briefing Box */}
       {!isLoading && result && result.tacticalBriefing && (
-        <div className="glass-card p-4 w-full bg-gradient-to-r from-[rgba(10,20,45,0.95)] to-[rgba(7,17,38,0.95)] border-l-4 border-l-[#6D4AFF] border-[rgba(80,130,255,0.22)] rounded-xl shadow-[0_4px_25px_rgba(100,70,255,0.15)] relative overflow-hidden animate-fade-in-up">
+        <div className="glass-card p-4 w-full bg-gradient-to-r from-[rgba(20,24,36,0.95)] to-[rgba(14,18,27,0.95)] border-l-4 border-l-[#6D4AFF] border-white/[0.08] rounded-xl shadow-[0_4px_25px_rgba(0,0,0,0.35)] relative overflow-hidden animate-fade-in-up">
           <div className="flex gap-4 items-start">
             <div className="mt-1 p-2 bg-[rgba(109,74,255,0.2)] rounded-full shadow-[0_0_15px_rgba(109,74,255,0.4)]">
               <Bot size={20} className="text-[#8B5CF6]" />
