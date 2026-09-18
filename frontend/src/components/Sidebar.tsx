@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Home, Crosshair, BarChart3, MapPin, FileText, Settings as SettingsIcon } from 'lucide-react';
+import { 
+  Home, 
+  Crosshair, 
+  BarChart3, 
+  MapPin, 
+  FileText, 
+  Settings as SettingsIcon,
+  PanelLeftClose,
+  PanelLeftOpen
+} from 'lucide-react';
 
 const navItems = [
   { id: 'home', label: 'Home', icon: Home },
@@ -13,62 +22,152 @@ const navItems = [
 interface SidebarProps {
   activeNav: string;
   onNavChange: (id: string) => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-const Sidebar = ({ activeNav, onNavChange }: SidebarProps) => {
+const Sidebar = ({ activeNav, onNavChange, isCollapsed: propCollapsed, onToggleCollapse }: SidebarProps) => {
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  const isCollapsed = propCollapsed !== undefined ? propCollapsed : internalCollapsed;
+
+  const handleToggle = () => {
+    if (onToggleCollapse) {
+      onToggleCollapse();
+    } else {
+      setInternalCollapsed(prev => !prev);
+    }
+  };
 
   return (
     <aside
-      className="flex flex-col h-screen flex-shrink-0"
+      className="flex flex-col h-screen flex-shrink-0 select-none overflow-x-hidden transition-all duration-300 ease-in-out relative z-30"
       style={{
-        width: '260px',
+        width: isCollapsed ? '72px' : '260px',
         background: 'linear-gradient(to bottom, #050D1C, #020617)',
         borderRight: '1px solid rgba(80, 130, 255, 0.15)',
       }}
     >
       {/* Brand Section */}
-      <div className="pt-6 px-5 flex flex-col gap-2">
-        <div 
-          className="flex items-center gap-3 cursor-pointer group"
-          onClick={() => onNavChange('home')}
-        >
-          {/* Logo SVG */}
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] transition-all duration-300">
-            <path d="M16 2L28.1244 9V23L16 30L3.87564 23V9L16 2Z" stroke="url(#paint0_linear)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M16 2V16M28.1244 9L16 16M3.87564 9L16 16M16 30V16" stroke="url(#paint1_linear)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <defs>
-              <linearGradient id="paint0_linear" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#22D3EE" />
-                <stop offset="1" stopColor="#6D4AFF" />
-              </linearGradient>
-              <linearGradient id="paint1_linear" x1="16" y1="2" x2="16" y2="30" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#2563FF" />
-                <stop offset="1" stopColor="#22D3EE" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <div>
-            <h1 className="text-white text-lg font-semibold tracking-wide group-hover:text-cyan-300 transition-colors">ParkSight AI</h1>
+      <div className={`pt-5 pb-1 transition-all duration-300 ${isCollapsed ? 'px-2 flex flex-col items-center gap-3' : 'px-4'}`}>
+        {!isCollapsed ? (
+          <div className="flex items-center justify-between">
+            <div 
+              className="flex items-center gap-3 cursor-pointer group min-w-0"
+              onClick={() => onNavChange('home')}
+            >
+              {/* Logo SVG */}
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0 group-hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] transition-all duration-300">
+                <path d="M16 2L28.1244 9V23L16 30L3.87564 23V9L16 2Z" stroke="url(#paint0_linear)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 2V16M28.1244 9L16 16M3.87564 9L16 16M16 30V16" stroke="url(#paint1_linear)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <defs>
+                  <linearGradient id="paint0_linear" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#22D3EE" />
+                    <stop offset="1" stopColor="#6D4AFF" />
+                  </linearGradient>
+                  <linearGradient id="paint1_linear" x1="16" y1="2" x2="16" y2="30" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#2563FF" />
+                    <stop offset="1" stopColor="#22D3EE" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="min-w-0">
+                <h1 className="text-white text-base font-semibold tracking-wide group-hover:text-cyan-300 transition-colors truncate">ParkSight AI</h1>
+                <p className="text-slate-400 text-[11px] truncate">Smarter Parking. Safer Cities.</p>
+              </div>
+            </div>
+            {/* Collapse Toggle Button */}
+            <button
+              type="button"
+              onClick={handleToggle}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors border-none outline-none cursor-pointer flex items-center justify-center flex-shrink-0 ml-1"
+              title="Collapse sidebar"
+            >
+              <PanelLeftClose size={16} />
+            </button>
           </div>
-        </div>
-        <p className="text-slate-400 text-xs">Smarter Parking. Safer Cities.</p>
+        ) : (
+          <div className="flex flex-col items-center gap-2.5 w-full">
+            <div 
+              className="cursor-pointer group flex items-center justify-center p-1"
+              onClick={() => onNavChange('home')}
+              title="ParkSight AI"
+            >
+              <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)] transition-all duration-300">
+                <path d="M16 2L28.1244 9V23L16 30L3.87564 23V9L16 2Z" stroke="url(#paint0_linear_mini)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 2V16M28.1244 9L16 16M3.87564 9L16 16M16 30V16" stroke="url(#paint1_linear_mini)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <defs>
+                  <linearGradient id="paint0_linear_mini" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#22D3EE" />
+                    <stop offset="1" stopColor="#6D4AFF" />
+                  </linearGradient>
+                  <linearGradient id="paint1_linear_mini" x1="16" y1="2" x2="16" y2="30" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#2563FF" />
+                    <stop offset="1" stopColor="#22D3EE" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            {/* Expand Toggle Button */}
+            <button
+              type="button"
+              onClick={handleToggle}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors border-none outline-none cursor-pointer flex items-center justify-center"
+              title="Expand sidebar"
+            >
+              <PanelLeftOpen size={16} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Navigation Section */}
-      <nav className="mt-8 px-3 flex flex-col gap-1">
+      <nav className={`mt-6 flex flex-col gap-1.5 ${isCollapsed ? 'px-2 items-center' : 'px-3'}`}>
         {navItems.map((item) => {
           const isActive = activeNav === item.id;
           const isHovered = hoveredItem === item.id;
           const Icon = item.icon;
           
+          if (isCollapsed) {
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onNavChange(item.id)}
+                onMouseEnter={() => setHoveredItem(item.id)}
+                onMouseLeave={() => setHoveredItem(null)}
+                title={item.label}
+                className={`relative flex items-center justify-center w-11 h-11 rounded-xl cursor-pointer transition-all duration-200 border-none outline-none group ${
+                  isActive ? 'text-white' : 'text-slate-400 hover:text-slate-100'
+                }`}
+                style={
+                  isActive
+                    ? {
+                        background: 'linear-gradient(135deg, #2563FF, #6D4AFF)',
+                        boxShadow: '0 0 18px rgba(70,70,255,0.35)',
+                      }
+                    : {
+                        background: isHovered ? 'rgba(255,255,255,0.08)' : 'transparent',
+                      }
+                }
+              >
+                <Icon size={19} className={`transition-colors duration-200 ${isActive ? 'text-white' : isHovered ? 'text-slate-200' : ''}`} />
+                {isActive && (
+                  <span className="absolute -right-0.5 top-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22D3EE]" />
+                )}
+              </button>
+            );
+          }
+
           return (
             <button
               key={item.id}
+              type="button"
               onClick={() => onNavChange(item.id)}
               onMouseEnter={() => setHoveredItem(item.id)}
               onMouseLeave={() => setHoveredItem(null)}
-              className={`flex items-center gap-3 py-2.5 px-4 rounded-xl cursor-pointer transition-all duration-200 w-full text-left border-none outline-none ${
+              className={`flex items-center gap-3 py-2.5 px-3.5 rounded-xl cursor-pointer transition-all duration-200 w-full text-left border-none outline-none ${
                 isActive
                   ? 'text-white'
                   : 'text-slate-400 hover:text-slate-100'
@@ -84,19 +183,33 @@ const Sidebar = ({ activeNav, onNavChange }: SidebarProps) => {
                     }
               }
             >
-              <Icon size={20} className={`transition-colors duration-200 ${isActive ? 'text-white' : isHovered ? 'text-slate-200' : ''}`} />
-              <span className="font-medium text-sm">{item.label}</span>
+              <Icon size={19} className={`flex-shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : isHovered ? 'text-slate-200' : ''}`} />
+              <span className="font-medium text-sm whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
               {isActive && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white/80" />
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white/80 flex-shrink-0" />
               )}
             </button>
           );
         })}
       </nav>
 
-      {/* Bottom Section - Animated Smart City Skyline & Cyber Patrol Car */}
-      <div className="mt-auto flex flex-col pb-4">
-        <div className="w-full h-28 relative overflow-hidden flex items-end border-b border-[rgba(80,130,255,0.15)] bg-gradient-to-t from-[#050D20] to-transparent">
+      {/* Bottom Section */}
+      {isCollapsed ? (
+        <div className="mt-auto pb-6 flex flex-col items-center justify-center">
+          <div 
+            className="flex flex-col items-center justify-center p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 cursor-pointer hover:bg-emerald-500/20 transition-all shadow-[0_0_12px_rgba(16,185,129,0.15)]"
+            title="Bangalore Smart Patrol Active (LIVE)"
+          >
+            <span className="relative flex h-2.5 w-2.5 mb-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+            </span>
+            <span className="text-[9px] font-extrabold tracking-wider text-emerald-400">LIVE</span>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-auto flex flex-col pb-4">
+          <div className="w-full h-28 relative overflow-hidden flex items-end border-b border-[rgba(80,130,255,0.15)] bg-gradient-to-t from-[#050D20] to-transparent">
           <svg 
             width="260" 
             height="110" 
@@ -302,6 +415,7 @@ const Sidebar = ({ activeNav, onNavChange }: SidebarProps) => {
           </p>
         </div>
       </div>
+      )}
     </aside>
   );
 };

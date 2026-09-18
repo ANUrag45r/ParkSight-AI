@@ -494,34 +494,39 @@ const TopHeader = ({
                   ? 'Requesting microphone permission in your browser...'
                   : 'Ask AI or speak: "Show Brigade Road tomorrow at 7 PM", "Koramangala at 8 PM", "Show analytics"...'
               }
-              className={`w-full pl-9 pr-20 py-2 rounded-xl text-xs bg-[#050D20] text-white placeholder:text-slate-500 border transition-all outline-none ${
+              className={`w-full pl-9 ${inputQuery ? 'pr-24' : 'pr-16'} py-2 rounded-xl text-xs bg-[#050D20] text-white placeholder:text-slate-500 border transition-all outline-none ${
                 voiceState === 'listening'
                   ? 'border-pink-500/80 shadow-[0_0_15px_rgba(233,70,255,0.25)] font-semibold text-pink-200'
                   : 'border-[rgba(80,130,255,0.2)] focus:border-cyan-400'
               }`}
             />
-            {inputQuery && (
+            {/* Action buttons at right */}
+            <div className="absolute right-1.5 flex items-center gap-1.5">
+              {inputQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInputQuery('');
+                    setErrorMessage(null);
+                    setLastExecutedText('');
+                  }}
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer border-none outline-none"
+                  title="Clear input"
+                >
+                  <X size={12} />
+                </button>
+              )}
               <button
-                onClick={() => {
-                  setInputQuery('');
-                  setErrorMessage(null);
-                  setLastExecutedText('');
-                }}
-                className="absolute right-14 text-slate-400 hover:text-white p-1 cursor-pointer bg-transparent border-none outline-none"
-                title="Clear"
+                type="button"
+                onClick={() => handleManualSubmit()}
+                disabled={!inputQuery.trim()}
+                className="px-3 py-1 rounded-lg text-xs font-semibold bg-gradient-to-r from-[#2563FF] to-[#6D4AFF] text-white disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 cursor-pointer transition-opacity flex items-center gap-1 border-none outline-none shadow-[0_0_10px_rgba(37,99,255,0.3)]"
+                title="Execute query"
               >
-                <X size={13} />
+                <Send size={11} />
+                <span>Run</span>
               </button>
-            )}
-            <button
-              onClick={() => handleManualSubmit()}
-              disabled={!inputQuery.trim()}
-              className="absolute right-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-gradient-to-r from-[#2563FF] to-[#6D4AFF] text-white disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 cursor-pointer transition-opacity flex items-center gap-1 border-none outline-none"
-              title="Execute query"
-            >
-              <Send size={11} />
-              <span>Run</span>
-            </button>
+            </div>
           </div>
         </div>
 
