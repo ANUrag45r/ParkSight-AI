@@ -319,7 +319,7 @@ const TopHeader = ({
         </div>
 
         {/* Right Side - Glass Card */}
-        <div className="bg-[rgba(7,17,38,0.85)] border border-[rgba(80,130,255,0.22)] rounded-2xl px-5 py-3 flex items-center gap-4 shadow-[0_10px_40px_rgba(0,0,0,0.25)]">
+        <div className="bg-[rgba(14,18,27,0.85)] border border-white/[0.08] backdrop-blur-xl rounded-2xl px-5 py-3 flex items-center gap-4 shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
           {/* Location Section */}
           <div className="flex flex-col items-start gap-1">
             <div className="flex items-center gap-1.5">
@@ -336,7 +336,7 @@ const TopHeader = ({
           </div>
 
           {/* Vertical divider */}
-          <div className="w-px h-8 bg-[rgba(80,130,255,0.2)]" />
+          <div className="w-px h-8 bg-white/[0.08]" />
 
           {/* Weather Section - Real-time Bangalore Telemetry */}
           <div 
@@ -395,14 +395,14 @@ const TopHeader = ({
             {/* User Dropdown Menu */}
             {showUserMenu && (
               <div className="absolute right-0 top-12 w-48 z-50 animate-count" style={{
-                background: 'rgba(7,17,38,0.95)',
-                border: '1px solid rgba(80,130,255,0.3)',
+                background: 'rgba(14, 18, 27, 0.96)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '12px',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(70,70,255,0.1)',
-                backdropFilter: 'blur(12px)',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.6), 0 0 20px rgba(255,255,255,0.04)',
+                backdropFilter: 'blur(16px)',
                 overflow: 'hidden',
               }}>
-                <div className="px-4 py-3 border-b border-[rgba(80,130,255,0.15)]">
+                <div className="px-4 py-3 border-b border-white/[0.08]">
                   <p className="text-sm font-medium text-white">Admin User</p>
                   <p className="text-xs text-slate-400">admin@parksight.ai</p>
                 </div>
@@ -420,7 +420,7 @@ const TopHeader = ({
                   <Settings size={14} />
                   Settings
                 </button>
-                <div className="border-t border-[rgba(80,130,255,0.15)]">
+                <div className="border-t border-white/[0.08]">
                   <button
                     onClick={() => onUserMenuAction('Logged out')}
                     className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer bg-transparent border-none outline-none text-left transition-colors duration-150"
@@ -437,10 +437,10 @@ const TopHeader = ({
 
       {/* Futuristic Voice Command & Natural Language Query Search Bar */}
       <div 
-        className={`w-full bg-[rgba(7,17,38,0.88)] border rounded-2xl px-4 py-2.5 shadow-[0_10px_35px_rgba(0,0,0,0.3)] backdrop-blur-xl flex flex-col gap-2 transition-all duration-300 ${
+        className={`w-full bg-[rgba(14,18,27,0.85)] border rounded-2xl px-4 py-2.5 shadow-[0_10px_35px_rgba(0,0,0,0.3)] backdrop-blur-xl flex flex-col gap-2 transition-all duration-300 ${
           voiceState === 'listening'
             ? 'border-pink-500/60 shadow-[0_0_25px_rgba(233,70,255,0.25)] ring-1 ring-pink-500/40'
-            : 'border-[rgba(80,130,255,0.22)]'
+            : 'border-white/[0.08] hover:border-white/[0.14]'
         }`}
       >
         <div className="flex items-center gap-2.5 w-full">
@@ -494,10 +494,10 @@ const TopHeader = ({
                   ? 'Requesting microphone permission in your browser...'
                   : 'Ask AI or speak: "Show Brigade Road tomorrow at 7 PM", "Koramangala at 8 PM", "Show analytics"...'
               }
-              className={`w-full pl-9 ${inputQuery ? 'pr-24' : 'pr-16'} py-2 rounded-xl text-xs bg-[#050D20] text-white placeholder:text-slate-500 border transition-all outline-none ${
+              className={`w-full pl-9 ${inputQuery ? 'pr-24' : 'pr-16'} py-2 rounded-xl text-xs bg-[rgba(18,22,33,0.9)] text-white placeholder:text-slate-500 border transition-all outline-none ${
                 voiceState === 'listening'
                   ? 'border-pink-500/80 shadow-[0_0_15px_rgba(233,70,255,0.25)] font-semibold text-pink-200'
-                  : 'border-[rgba(80,130,255,0.2)] focus:border-cyan-400'
+                  : 'border-white/[0.08] focus:border-white/[0.22]'
               }`}
             />
             {/* Action buttons at right */}

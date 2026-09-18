@@ -18,7 +18,7 @@ html, body, #root {
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #050B18;
+  background: #0B0D14;
   color: #ffffff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -30,31 +30,33 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(7, 17, 38, 0.5);
+  background: rgba(11, 13, 20, 0.6);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(80, 130, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(80, 130, 255, 0.5);
+  background: rgba(255, 255, 255, 0.22);
 }
 
-/* Glass card base */
+/* Smoked Obsidian Glass card base */
 .glass-card {
-  background: rgba(7, 17, 38, 0.85);
-  border: 1px solid rgba(80, 130, 255, 0.22);
+  background: rgba(14, 18, 27, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
 }
 
 .glass-card-sm {
-  background: rgba(7, 17, 38, 0.85);
-  border: 1px solid rgba(80, 130, 255, 0.18);
+  background: rgba(14, 18, 27, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
 }
 
 /* Glow effects */
@@ -204,7 +206,7 @@ body {
 
 /* LEAFLET CUSTOM STYLES FOR FUTURISTIC SMART CITY UI */
 .leaflet-container {
-  background-color: #050B18 !important;
+  background-color: #0B0D14 !important;
   font-family: inherit;
   width: 100% !important;
   height: 100% !important;
@@ -220,13 +222,13 @@ body {
 }
 
 .leaflet-control-attribution {
-  background: rgba(5, 11, 24, 0.75) !important;
+  background: rgba(11, 14, 22, 0.8) !important;
   color: #64748b !important;
   font-size: 9px !important;
   padding: 2px 8px !important;
   border-radius: 4px !important;
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(80, 130, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   margin: 6px !important;
 }
 
@@ -237,11 +239,11 @@ body {
 
 /* Custom dark popup */
 .leaflet-popup-content-wrapper {
-  background: rgba(7, 17, 38, 0.95) !important;
-  border: 1px solid rgba(80, 130, 255, 0.3) !important;
+  background: rgba(14, 18, 27, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 12px !important;
   color: #ffffff !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 25px rgba(70, 70, 255, 0.2) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(37, 99, 235, 0.15) !important;
   backdrop-filter: blur(12px) !important;
   padding: 0 !important;
 }
@@ -252,17 +254,17 @@ body {
 }
 
 .leaflet-popup-tip {
-  background: rgba(7, 17, 38, 0.95) !important;
-  border: 1px solid rgba(80, 130, 255, 0.3) !important;
+  background: rgba(14, 18, 27, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Esri Dark Canvas high-tech styling: transforms neutral dark gray into futuristic navy blue/cyan glow */
+/* Esri Dark Canvas: Calibrated neutral dark charcoal map styling */
 .esri-dark-tiles {
-  filter: brightness(0.95) contrast(1.15) hue-rotate(205deg) saturate(1.4);
+  filter: brightness(0.92) contrast(1.15) saturate(1.05);
 }
 
 .esri-ref-tiles {
-  filter: brightness(1.1) contrast(1.2) hue-rotate(190deg);
+  filter: brightness(1.08) contrast(1.15);
   opacity: 0.9;
 }
 

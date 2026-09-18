@@ -237,16 +237,22 @@ function App() {
   const currentLocation = locations.find(l => l.id === selectedLocation) || locations[0];
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#050B18]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#0B0D14] relative text-slate-100 selection:bg-cyan-500/30">
+      {/* Ambient subtle backdrop depth */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-[15%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.035)_0%,transparent_70%)] blur-3xl" />
+        <div className="absolute -bottom-[15%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-[radial-gradient(circle,rgba(109,74,255,0.025)_0%,transparent_70%)] blur-3xl" />
+      </div>
+
       {/* Notification Toast */}
       {notification && (
         <div className="fixed top-5 right-5 z-[100] animate-count" style={{
-          background: 'rgba(7,17,38,0.95)',
-          border: '1px solid rgba(80,130,255,0.35)',
+          background: 'rgba(14, 18, 27, 0.96)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
           borderRadius: '12px',
           padding: '12px 20px',
-          boxShadow: '0 0 30px rgba(70,70,255,0.2), 0 10px 40px rgba(0,0,0,0.4)',
-          backdropFilter: 'blur(12px)',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.6), 0 0 20px rgba(255,255,255,0.04)',
+          backdropFilter: 'blur(16px)',
           color: '#fff',
           fontSize: '13px',
           fontWeight: 500,
